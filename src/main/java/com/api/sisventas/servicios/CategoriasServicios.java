@@ -28,8 +28,19 @@ public class CategoriasServicios {
         return categoriasRepositorios.findById(id);
     }
 
-    public void updateCategoria(Categorias categorias) {
-        categoriasRepositorios.save(categorias);
+    public void updateCategoria(Long id, Categorias categorias) {
+        Optional<Categorias> categoriaExistente = categoriasRepositorios.findById(id);
+        if (categoriaExistente.isPresent()) {
+            Categorias categoria = categoriaExistente.get();
+            // Actualizar los valores de la categoría con los nuevos valores
+            categoria.setName(categorias.getName());
+            categoria.setIcon(categorias.getIcon());
+            // Guardar la categoría actualizada
+            categoriasRepositorios.save(categoria);
+        } else {
+            // Manejar el caso en el que no se encuentre la categoría con el ID dado
+            throw new RuntimeException("No se encontró la categoría con el ID especificado");
+        }
     }
 
     public void deleteCategoria(Long id) {

@@ -3,6 +3,8 @@ package com.api.sisventas.controladores;
 import com.api.sisventas.entidades.Categorias;
 import com.api.sisventas.servicios.CategoriasServicios;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,9 +28,15 @@ public class RestCategorias {
     @GetMapping(value = "/listarId/{id}", headers = "Accept=application/json")
     public Optional<Categorias> ObtenerCategoriaRoute(@PathVariable Long id){return categoriasServicios.readOneCategoria(id);}
 
-    @PutMapping(value = "/actualizar", headers = "Accept=application/json")
-    public void actualizarCategoriaRoute(@RequestBody Categorias categorias) {
-        categoriasServicios.updateCategoria(categorias);
+    @PutMapping("/actualizar/{id}")
+    public ResponseEntity<String> actualizarCategoriaRoute(@PathVariable("id") Long id, @RequestBody Categorias categorias) {
+        try {
+            categorias.setIdCategory(id);
+            categoriasServicios.updateCategoria(id, categorias);
+            return ResponseEntity.ok("Categoría actualizada exitosamente");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No se pudo actualizar la categoría");
+        }
     }
 
     @DeleteMapping(value = "/eliminar/{id}", headers = "Accept=application/json")

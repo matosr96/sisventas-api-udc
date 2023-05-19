@@ -18,7 +18,7 @@ public class CorsConfig {
                         .allowedMethods("*")
                         .exposedHeaders("*");
 
-                registry.addMapping("/api/v1/categories/**")
+                registry.addMapping("/api/v1/**")
                         .allowedOrigins("*")
                         .allowedMethods("*")
                         .exposedHeaders("*");
