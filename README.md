@@ -2,8 +2,7 @@
 
 ## Descripción
 
-Este proyecto es desarrollado como trabajo colaborativo contextualizado para la clase de programacion orrientada a objetos, de la carrera de ingenieria de software segundo semrestre, de la universidad de Cartagena, en su sede Cerete
-
+Este proyecto es desarrollado como trabajo colaborativo contextualizado para la clase de programación orientada a objetos, de la carrera de ingeniería de software del segundo semestre, en la Universidad de Cartagena, sede Cereté.
 
 ## Dependencias
 
