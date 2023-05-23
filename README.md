@@ -1,8 +1,12 @@
-# API SISVENTAS - TCC UNIVERSIDAD DE CARTAGENA
+# UNIVERSIDAD DE CARTAGENA
+## INGENIERÍA DE SOFTWARE - PROGRAMACIÓN ORIENTADA A OBJETOS
+### TRABAJO COLABORATIVO CONTEXTUALIZADO
+
+## Sistema Compra de productos
 
 ## Descripción
 
-Este proyecto es desarrollado como trabajo colaborativo contextualizado para la clase de programación orientada a objetos, de la carrera de ingeniería de software del segundo semestre, en la Universidad de Cartagena, sede Cereté.
+Se desarrollará un sistema que permitirá comprar productos, el cual estará ligado a un stock. Se podrá hacer seguimiento a la compra de dicho producto, el cual tendrá un número de factura unido a la compra, la cual puede tener uno o varios productos.
 
 ## Dependencias
 
