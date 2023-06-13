@@ -38,6 +38,7 @@ public class ProductoServicio {
 
     public void actualizarProducto(Long id, Producto producto) {
         Optional<Producto> productoExistente = productoRepositorio.findById(id);
+
         if (productoExistente.isPresent()) {
             Producto productoActualizado = productoExistente.get();
             // Actualizar los valores del producto con los nuevos valores
