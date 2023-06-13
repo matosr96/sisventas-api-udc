@@ -38,7 +38,7 @@ public class RestProducts {
         }
     }
 
-    @GetMapping(value = "/geyById/{id}", headers = "Accept=application/json")
+    @GetMapping(value = "/getById/{id}", headers = "Accept=application/json")
     public Optional<Producto> obtenerProductoRoute(@PathVariable Long id) {
         return productoServicio.obtenerProductoPorId(id);
     }
@@ -46,7 +46,9 @@ public class RestProducts {
     @PutMapping("/update/{id}")
     public ResponseEntity<String> actualizarProductoRoute(@PathVariable("id") Long id, @RequestBody Producto producto) {
         try {
+            //no darle importancia a esto
             producto.setIdProduct(id);
+            //no darle importancia a esta
             productoServicio.actualizarProducto(id, producto);
             return ResponseEntity.ok("Producto actualizado exitosamente");
         } catch (Exception e) {
