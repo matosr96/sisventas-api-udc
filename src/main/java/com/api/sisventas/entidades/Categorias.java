@@ -17,4 +17,7 @@ public class Categorias {
 
     @Column(name = "icon_category")
     private String icon;
+
+    @Column(name = "user")
+    private Number user;
 }

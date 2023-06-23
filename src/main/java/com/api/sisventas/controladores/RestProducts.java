@@ -46,9 +46,9 @@ public class RestProducts {
     @PutMapping("/update/{id}")
     public ResponseEntity<String> actualizarProductoRoute(@PathVariable("id") Long id, @RequestBody Producto producto) {
         try {
-            //no darle importancia a esto
+            System.out.println("ID del producto ===================================================: " + id);
+            System.out.println("Producto ===================================================:: " + producto);
             producto.setIdProduct(id);
-            //no darle importancia a esta
             productoServicio.actualizarProducto(id, producto);
             return ResponseEntity.ok("Producto actualizado exitosamente");
         } catch (Exception e) {
