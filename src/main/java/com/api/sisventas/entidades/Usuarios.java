@@ -19,7 +19,20 @@ public class Usuarios {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
     private Long idUsuario;
+
+    @Column(name = "nombre")
+    private String nombre;
+
+    @Column(name = "apellido")
+    private String apellido;
+
+    @Column(name = "foto")
+    private String foto;
+
+    @Column(name = "username")
     private String username;
+
+    @Column(name = "password")
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
