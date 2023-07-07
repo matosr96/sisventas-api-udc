@@ -9,9 +9,11 @@ import com.api.sisventas.repositorios.RolesRepositorio;
 import com.api.sisventas.repositorios.UsuariosRepositorios;
 import com.api.sisventas.seguridad.JwtGenerador;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -108,8 +110,14 @@ public class RestControllerAuth {
                 // El usuario no fue encontrado
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
+        } catch (BadCredentialsException e) {
+            // Manejar la excepción de credenciales inválidas (usuario o contraseña incorrectos)
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        } catch (DataAccessException e) {
+            // Manejar la excepción de acceso a datos (por ejemplo, error de base de datos)
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
-            // Manejar la excepción y devolver una respuesta de error
+            // Manejar otras excepciones no controladas
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
