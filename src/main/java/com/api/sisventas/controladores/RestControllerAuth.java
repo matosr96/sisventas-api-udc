@@ -8,6 +8,13 @@ import com.api.sisventas.entidades.Usuarios;
 import com.api.sisventas.repositorios.RolesRepositorio;
 import com.api.sisventas.repositorios.UsuariosRepositorios;
 import com.api.sisventas.seguridad.JwtGenerador;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -18,16 +25,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("api/v1/auth")
+@Tag(name = "Autenticación", description = "APIs para gestión de autenticación y registro de usuarios")
 public class RestControllerAuth {
     private AuthenticationManager authenticationManager;
     private PasswordEncoder passwordEncoder;
@@ -36,7 +41,9 @@ public class RestControllerAuth {
     private JwtGenerador jwtGenerador;
 
     @Autowired
-    public RestControllerAuth(AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, RolesRepositorio rolesRepository, UsuariosRepositorios usuariosRepository, JwtGenerador jwtGenerador) {
+    public RestControllerAuth(AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, 
+                            RolesRepositorio rolesRepository, UsuariosRepositorios usuariosRepository, 
+                            JwtGenerador jwtGenerador) {
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
         this.rolesRepository = rolesRepository;
@@ -44,36 +51,21 @@ public class RestControllerAuth {
         this.jwtGenerador = jwtGenerador;
     }
 
+    @Operation(summary = "Registrar nuevo usuario", description = "Crea un nuevo usuario en el sistema y devuelve un token JWT")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario registrado exitosamente",
+                    content = @Content(schema = @Schema(implementation = DtoAuthRespuesta.class))),
+        @ApiResponse(responseCode = "400", description = "Datos de registro inválidos"),
+        @ApiResponse(responseCode = "409", description = "El nombre de usuario ya existe"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping("/signup")
-    public ResponseEntity<DtoAuthRespuesta> registrar(@RequestBody DtoRegistro dtoRegistro) {
-
-        Usuarios usuarios = new Usuarios();
-        usuarios.setUsername(dtoRegistro.getUsername());
-        usuarios.setPassword(passwordEncoder.encode(dtoRegistro.getPassword()));
-        usuarios.setNombre(dtoRegistro.getNombre());
-        usuarios.setApellido(dtoRegistro.getApellido());
-        usuarios.setFoto(dtoRegistro.getFoto());
-
-        Roles roles = rolesRepository.findByName("USER").orElseThrow(() -> new RuntimeException("Role USER no encontrado"));
-        usuarios.setRoles(Collections.singletonList(roles));
-
-        usuariosRepository.save(usuarios);
-
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                dtoRegistro.getUsername(), dtoRegistro.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = jwtGenerador.generarToken(authentication);
-
-        DtoAuthRespuesta authRespuesta = new DtoAuthRespuesta(token, usuarios);
-
-        return new ResponseEntity<>(authRespuesta, HttpStatus.OK);
-    }
-
-    @PostMapping("/signupAdm")
-    public ResponseEntity<String> registrarAdmin(@RequestBody DtoRegistro dtoRegistro) {
+    public ResponseEntity<DtoAuthRespuesta> registrar(
+            @Parameter(description = "Datos de registro del usuario", required = true)
+            @RequestBody DtoRegistro dtoRegistro) {
         try {
             if (usuariosRepository.existsByUsername(dtoRegistro.getUsername())) {
-                return new ResponseEntity<>("El usuario ya existe, intenta con otro", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(HttpStatus.CONFLICT);
             }
 
             Usuarios usuarios = new Usuarios();
@@ -83,41 +75,48 @@ public class RestControllerAuth {
             usuarios.setApellido(dtoRegistro.getApellido());
             usuarios.setFoto(dtoRegistro.getFoto());
 
-            Roles roles = rolesRepository.findByName("ADMIN").orElseThrow(() -> new RuntimeException("Role ADMIN no encontrado"));
+            Roles roles = rolesRepository.findByName("USER")
+                    .orElseThrow(() -> new RuntimeException("Role USER no encontrado"));
             usuarios.setRoles(Collections.singletonList(roles));
 
             usuariosRepository.save(usuarios);
-            return new ResponseEntity<>("Registro de admin exitoso", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error al registrar admin: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(dtoRegistro.getUsername(), dtoRegistro.getPassword()));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String token = jwtGenerador.generarToken(authentication);
+
+            return new ResponseEntity<>(new DtoAuthRespuesta(token, usuarios), HttpStatus.OK);
+        } catch (DataAccessException e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @PostMapping("/signin")
-    public ResponseEntity<DtoAuthRespuesta> login(@RequestBody DtoLogin dtoLogin) {
+    @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y devuelve un token JWT")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Login exitoso",
+                    content = @Content(schema = @Schema(implementation = DtoAuthRespuesta.class))),
+        @ApiResponse(responseCode = "401", description = "Credenciales inválidas"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PostMapping("/login")
+    public ResponseEntity<DtoAuthRespuesta> login(
+            @Parameter(description = "Credenciales de acceso", required = true)
+            @RequestBody DtoLogin dtoLogin) {
         try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                    dtoLogin.getUsername(), dtoLogin.getPassword()));
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(dtoLogin.getUsername(), dtoLogin.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String token = jwtGenerador.generarToken(authentication);
-            Optional<Usuarios> user = usuariosRepository.findByUsername(dtoLogin.getUsername());
 
-            if (user.isPresent()) {
-                Usuarios usuario = user.get();
-                DtoAuthRespuesta authRespuesta = new DtoAuthRespuesta(token, usuario);
-                return new ResponseEntity<>(authRespuesta, HttpStatus.OK);
-            } else {
-                // El usuario no fue encontrado
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            Optional<Usuarios> usuario = usuariosRepository.findByUsername(dtoLogin.getUsername());
+            if (usuario.isPresent()) {
+                return new ResponseEntity<>(new DtoAuthRespuesta(token, usuario.get()), HttpStatus.OK);
             }
-        } catch (BadCredentialsException e) {
-            // Manejar la excepción de credenciales inválidas (usuario o contraseña incorrectos)
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        } catch (DataAccessException e) {
-            // Manejar la excepción de acceso a datos (por ejemplo, error de base de datos)
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (BadCredentialsException e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
-            // Manejar otras excepciones no controladas
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
