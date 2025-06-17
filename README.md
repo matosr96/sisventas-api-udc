@@ -2,34 +2,132 @@
 ## INGENIERÍA DE SOFTWARE - PROGRAMACIÓN ORIENTADA A OBJETOS
 ### TRABAJO COLABORATIVO CONTEXTUALIZADO
 
-## Sistema Compra de productos
+## Sistema de Gestión de Ventas (SisVentas)
 
 ## Descripción
 
-Se desarrollará un sistema que permitirá comprar productos, el cual estará ligado a un stock. Se podrá hacer seguimiento a la compra de dicho producto, el cual tendrá un número de factura unido a la compra, la cual puede tener uno o varios productos.
+SisVentas es un sistema de gestión de ventas que permite administrar productos, realizar compras y gestionar el inventario. El sistema está diseñado para manejar múltiples productos por factura y mantener un control detallado del stock.
 
-## Dependencias
+### Características Principales
 
-- Spring Boot Starter Data JPA: Se utiliza para la integración de JPA (Java Persistence API) en Spring Boot.
-- Spring Boot Starter Security: Se utiliza para la integración de la seguridad en Spring Boot.
-- Spring Boot Starter Web: Se utiliza para el desarrollo de aplicaciones web en Spring Boot.
-- MySQL Connector/J: Se utiliza para la conexión con una base de datos MySQL.
-- Lombok: Es una biblioteca que simplifica la creación de clases Java eliminando la necesidad de escribir código repetitivo.
-- Spring Boot Starter Test: Se utiliza para las pruebas unitarias en Spring Boot.
-- Spring Security Test: Se utiliza para las pruebas de seguridad en Spring Boot.
-- jjwt: Es una biblioteca para trabajar con JSON Web Tokens (JWT) en Java.
-- jaxb-api: Es una API para el procesamiento de XML en Java.
+- Gestión de productos y categorías
+- Control de inventario en tiempo real
+- Generación de facturas
+- Seguimiento de compras
+- Gestión de usuarios y roles
+- API RESTful para integración con otros sistemas
 
-## Requisitos
+## Tecnologías Utilizadas
 
+### Backend
 - Java 17
+- Spring Boot 3.x
+- Spring Security con JWT
+- Spring Data JPA
+- MySQL 8.x
 
-## Cómo empezar
+### Dependencias Principales
 
-1. Clona este repositorio.
-2. Configura la conexión a la base de datos en el archivo de configuración `application.properties`.
-3. Ejecuta la aplicación.
+- **Spring Boot Starter Data JPA**: Integración con JPA para persistencia de datos
+- **Spring Boot Starter Security**: Implementación de seguridad y autenticación
+- **Spring Boot Starter Web**: Desarrollo de aplicaciones web REST
+- **MySQL Connector/J**: Conexión con base de datos MySQL
+- **Lombok**: Reducción de código boilerplate
+- **jjwt**: Manejo de JSON Web Tokens
+- **jaxb-api**: Procesamiento de XML
 
-## Información adicional
+## Requisitos del Sistema
 
-Este proyecto utiliza el plugin `spring-boot-maven-plugin` para compilar y empaquetar la aplicación.
+- Java 17 o superior
+- MySQL 8.x
+- Maven 3.6.x o superior
+- IDE compatible con Java (recomendado: IntelliJ IDEA o Eclipse)
+
+## Configuración del Proyecto
+
+1. Clona el repositorio:
+```bash
+git clone https://github.com/tu-usuario/sisventas-api-udc.git
+cd sisventas-api-udc
+```
+
+2. Configura la base de datos:
+   - Crea una base de datos MySQL
+   - Configura las credenciales en `src/main/resources/application.properties`:
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/sisventas
+spring.datasource.username=tu_usuario
+spring.datasource.password=tu_contraseña
+```
+
+3. Compila el proyecto:
+```bash
+mvn clean install
+```
+
+4. Ejecuta la aplicación:
+```bash
+mvn spring-boot:run
+```
+
+## Estructura del Proyecto
+
+```
+src/
+├── main/
+│   ├── java/
+│   │   └── com/
+│   │       └── sisventas/
+│   │           ├── controllers/
+│   │           ├── models/
+│   │           ├── repositories/
+│   │           ├── services/
+│   │           └── security/
+│   └── resources/
+│       └── application.properties
+└── test/
+    └── java/
+        └── com/
+            └── sisventas/
+                └── tests/
+```
+
+## Documentación de la API
+
+La API REST está disponible en `http://localhost:8080/api/v1` y sigue las siguientes convenciones:
+
+- Autenticación mediante JWT
+- Respuestas en formato JSON
+- Códigos de estado HTTP estándar
+
+### Endpoints Principales
+
+- `POST /api/v1/auth/login`: Autenticación de usuarios
+- `GET /api/v1/products`: Listar productos
+- `POST /api/v1/products`: Crear producto
+- `GET /api/v1/invoices`: Listar facturas
+- `POST /api/v1/invoices`: Crear factura
+
+## Pruebas
+
+Para ejecutar las pruebas unitarias:
+
+```bash
+mvn test
+```
+
+## Contribución
+
+1. Fork el repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+## Contacto
+
+Universidad de Cartagena - Facultad de Ingeniería
