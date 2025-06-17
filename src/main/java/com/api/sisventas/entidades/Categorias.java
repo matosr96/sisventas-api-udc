@@ -18,6 +18,7 @@ public class Categorias {
     @Column(name = "icon_category")
     private String icon;
 
-    @Column(name = "user")
-    private Number user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user", referencedColumnName = "id_usuario")
+    private Usuarios usuario;
 }

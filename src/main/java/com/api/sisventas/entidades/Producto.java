@@ -43,9 +43,11 @@ public class Producto {
     @Column(name = "sales")
     private Integer sales;
 
-    @Column(name = "category")
-    private Integer category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category", referencedColumnName = "id_category")
+    private Categorias categoria;
 
-    @Column(name = "user")
-    private Number user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user", referencedColumnName = "id_usuario")
+    private Usuarios usuario;
 }

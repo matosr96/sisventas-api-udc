@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Entity
@@ -11,19 +12,24 @@ import java.util.Date;
 public class Venta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idSale")
+    @Column(name = "id_sale")
     private Long idSale;
 
-    @Column(name = "fechaVenta")
+    @Column(name = "fecha_venta")
     private Date fechaVenta;
 
-    @Column(name = "totalVenta")
+    @Column(name = "total_venta")
     private Integer totalVenta;
 
-    @Column(name = "productIds")
-    @ElementCollection
-    private Long[] productIds;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "venta_product_ids",
+        joinColumns = @JoinColumn(name = "venta_id_sale"),
+        inverseJoinColumns = @JoinColumn(name = "product_ids")
+    )
+    private List<Producto> productos;
 
-    @Column(name = "userId")
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id_usuario")
+    private Usuarios usuario;
 }
