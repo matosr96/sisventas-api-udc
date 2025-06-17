@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -13,60 +14,81 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
-    public SecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
+    public SecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, 
+                         JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
-
 
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-
     @Bean
-    JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter();
-    }
-
-    //Vamos a crear un bean el cual va a establecer una cadena de filtros de seguridad en nuestra aplicación.
-    // Y es aquí donde determinaremos los permisos segun los roles de usuarios para acceder a nuestra aplicación
-    @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors()
+            .cors()
                 .and()
-                .csrf().disable()
-                .exceptionHandling() //Permitimos el manejo de excepciones
-                .authenticationEntryPoint(jwtAuthenticationEntryPoint) //Nos establece un punto de entrada personalizado de autenticación para el manejo de autenticaciones no autorizadas
+            .csrf()
+                .disable()
+            .exceptionHandling()
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and()
-                .sessionManagement()
+            .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .authorizeHttpRequests() //Toda petición http debe ser autorizada
-                .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/**").hasAnyAuthority("ADMIN" , "USER")
-                .requestMatchers(HttpMethod.GET,"/api/v1/**").hasAnyAuthority("ADMIN" , "USER")
-                .requestMatchers(HttpMethod.GET,"/api/v1/**").hasAnyAuthority("ADMIN" , "USER")
-                .requestMatchers(HttpMethod.DELETE,"/api/v1/**").hasAnyAuthority("ADMIN" , "USER")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/**").hasAnyAuthority("ADMIN" , "USER")
+            .authorizeHttpRequests()
+                // Endpoints públicos
+                .requestMatchers(
+                    new AntPathRequestMatcher("/api/v1/auth/**"),
+                    new AntPathRequestMatcher("/swagger-ui/**"),
+                    new AntPathRequestMatcher("/v3/api-docs/**"),
+                    new AntPathRequestMatcher("/actuator/**")
+                ).permitAll()
+                // Endpoints de productos
+                .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasAuthority("ADMIN")
+                // Endpoints de facturas
+                .requestMatchers(HttpMethod.GET, "/api/v1/invoices/**").hasAnyAuthority("ADMIN", "USER")
+                .requestMatchers(HttpMethod.POST, "/api/v1/invoices/**").hasAnyAuthority("ADMIN", "USER")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/invoices/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/invoices/**").hasAuthority("ADMIN")
+                // Endpoints de usuarios
+                .requestMatchers(HttpMethod.GET, "/api/v1/users/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/v1/users/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasAuthority("ADMIN")
+                // Cualquier otra petición requiere autenticación
                 .anyRequest().authenticated()
                 .and()
-                .httpBasic();
-        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+            .headers()
+                .xssProtection()
+                .and()
+                .contentSecurityPolicy("default-src 'self'")
+                .and()
+            .frameOptions()
+                .deny();
+
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }

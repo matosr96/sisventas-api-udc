@@ -1,54 +1,93 @@
 package com.api.sisventas.seguridad;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtGenerador {
+    private static final Logger logger = LoggerFactory.getLogger(JwtGenerador.class);
 
-    //Método para crear un token por medio de la authentication
+    @Value("${app.jwt.secret}")
+    private String jwtSecret;
+
+    @Value("${app.jwt.expiration}")
+    private long jwtExpiration;
+
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
     public String generarToken(Authentication authentication) {
-
         String username = authentication.getName();
         Date tiempoActual = new Date();
-        Date expiracionToken = new Date(tiempoActual.getTime() + ConstantesSeguridad.JWT_EXPIRATION_TOKEN);
+        Date expiracionToken = new Date(tiempoActual.getTime() + jwtExpiration);
 
-        //Linea para generar el token
-        String token = Jwts.builder() //Construimos un token JWT llamado token
-                .setSubject(username) //Aca establecemos el nombre de usuario que está iniciando sesión
-                .setIssuedAt(new Date()) //Establecemos la fecha de emisión del token en el momento actual
-                .setExpiration(expiracionToken) //Establecemos la fecha de caducidad del token
-                .signWith(SignatureAlgorithm.HS512, ConstantesSeguridad.JWT_FIRMA) /*Utilizamos este método para firmar
-                nuestro token y de esta manera evitar la manipulación o modificación de este*/
-                .compact(); //Este método finaliza la construcción del token y lo convierte en una cadena compacta
-        return token;
+        // Obtener roles del usuario
+        String roles = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", roles);
+        claims.put("sub", username);
+        claims.put("created", new Date());
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(tiempoActual)
+                .setExpiration(expiracionToken)
+                .signWith(getSigningKey())
+                .compact();
     }
 
-    //Método para extraer un Username apartir de un token
     public String obtenerUsernameDeJwt(String token) {
-        Claims claims = Jwts.parser() // El método parser se utiliza con el fin de analizar el token
-                .setSigningKey(ConstantesSeguridad.JWT_FIRMA)// Establece la clave de firma, que se utiliza para verificar la firma del token
-                .parseClaimsJws(token) //Se utiliza para verificar la firma del token, apartir del String "token"
-                .getBody(); /*Obtenemos el claims(cuerpo) ya verificado del token el cual contendrá la información de
-                nombre de usuario, fecha de expiración y firma del token*/
-        return claims.getSubject(); //Devolvemos el nombre de usuario
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getSubject();
     }
 
-    //Método para validar el token
-    public Boolean validarToken(String token) {
+    public boolean validarToken(String token) {
         try {
-            //Validación del token por medio de la firma que contiene el String token(token)
-            //Si son idénticas validara el token o caso contrario saltara la excepción de abajo
-            Jwts.parser().setSigningKey(ConstantesSeguridad.JWT_FIRMA).parseClaimsJws(token);
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
-            throw new AuthenticationCredentialsNotFoundException("Jwt ah expirado o esta incorrecto");
+        } catch (SignatureException ex) {
+            logger.error("Firma JWT inválida: {}", ex.getMessage());
+            throw new AuthenticationCredentialsNotFoundException("Token JWT inválido");
+        } catch (MalformedJwtException ex) {
+            logger.error("Token JWT mal formado: {}", ex.getMessage());
+            throw new AuthenticationCredentialsNotFoundException("Token JWT mal formado");
+        } catch (ExpiredJwtException ex) {
+            logger.error("Token JWT expirado: {}", ex.getMessage());
+            throw new AuthenticationCredentialsNotFoundException("Token JWT expirado");
+        } catch (UnsupportedJwtException ex) {
+            logger.error("Token JWT no soportado: {}", ex.getMessage());
+            throw new AuthenticationCredentialsNotFoundException("Token JWT no soportado");
+        } catch (IllegalArgumentException ex) {
+            logger.error("Token JWT vacío: {}", ex.getMessage());
+            throw new AuthenticationCredentialsNotFoundException("Token JWT vacío");
         }
     }
 }
