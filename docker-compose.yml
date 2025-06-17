@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/sisventas
+      - SPRING_DATASOURCE_USERNAME=sisventas
+      - SPRING_DATASOURCE_PASSWORD=sisventas
+    depends_on:
+      - db
+    volumes:
+      - ./src:/app/src
+    networks:
+      - sisventas-network
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=sisventas
+      - MYSQL_USER=sisventas
+      - MYSQL_PASSWORD=sisventas
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - sisventas-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=sisventas
+      - PMA_PASSWORD=sisventas
+    depends_on:
+      - db
+    networks:
+      - sisventas-network
+
+volumes:
+  mysql-data:
+
+networks:
+  sisventas-network:
+    driver: bridge 
