@@ -100,10 +100,10 @@ public class RestProducts {
             @RequestBody Producto producto) {
         try {
             if (!productoServicio.obtenerProductoPorId(id).isPresent()) {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Producto no encontrado");
             }
-            producto.setId(id);
-            productoServicio.actualizarProducto(producto);
+            producto.setIdProduct(id);
+            productoServicio.actualizarProducto(id, producto);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -123,7 +123,7 @@ public class RestProducts {
             @PathVariable Long id) {
         try {
             if (!productoServicio.obtenerProductoPorId(id).isPresent()) {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Producto no encontrado");
             }
             productoServicio.eliminarProducto(id);
             return ResponseEntity.noContent().build();

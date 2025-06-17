@@ -22,10 +22,10 @@ services:
     ports:
       - "3306:3306"
     environment:
-      - MYSQL_DATABASE=sisventas
-      - MYSQL_USER=sisventas
-      - MYSQL_PASSWORD=sisventas
-      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=${MYSQL_DATABASE:sisventas}
+      - MYSQL_USER=${MYSQL_USER:sisventas}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:sisventas}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:root}
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
@@ -49,4 +49,4 @@ volumes:
 
 networks:
   sisventas-network:
-    driver: bridge 
+    driver: bridge

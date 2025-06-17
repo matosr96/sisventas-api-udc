@@ -56,9 +56,14 @@ public class SecurityConfig {
             .authorizeHttpRequests()
                 // Endpoints públicos
                 .requestMatchers(
-                    new AntPathRequestMatcher("/api/v1/auth/**"),
+                    new AntPathRequestMatcher("/"),
+                    new AntPathRequestMatcher("/index.html"),
+                    new AntPathRequestMatcher("/static/**"),
+                    new AntPathRequestMatcher("/swagger-ui.html"),
                     new AntPathRequestMatcher("/swagger-ui/**"),
+                    new AntPathRequestMatcher("/v3/api-docs"),
                     new AntPathRequestMatcher("/v3/api-docs/**"),
+                    new AntPathRequestMatcher("/api/v1/auth/**"),
                     new AntPathRequestMatcher("/actuator/**")
                 ).permitAll()
                 // Endpoints de productos
