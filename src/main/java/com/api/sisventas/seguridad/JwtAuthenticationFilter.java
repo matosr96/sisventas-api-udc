@@ -12,12 +12,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
 
 /*La función de esta clase será validar la información del token y si esto es exitoso,
 establecerá la autenticación de un usuario en la solicitud o en el contexto de seguridad de nuestra aplicación*/
+@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired

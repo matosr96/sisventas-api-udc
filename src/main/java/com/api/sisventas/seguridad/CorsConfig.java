@@ -51,11 +51,11 @@ public class CorsConfig {
         // Configurar tiempo máximo de cache
         corsConfiguration.setMaxAge(maxAge);
         
-        // No permitir credenciales
-        corsConfiguration.setAllowCredentials(false);
+        // Permitir credenciales si es necesario
+        corsConfiguration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", corsConfiguration);
+        source.registerCorsConfiguration("/**", corsConfiguration);
         
         return new CorsFilter(source);
     }

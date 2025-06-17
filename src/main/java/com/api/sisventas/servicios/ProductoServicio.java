@@ -48,7 +48,7 @@ public class ProductoServicio {
             productoActualizado.setCurrentStock(producto.getCurrentStock());
             productoActualizado.setInitialStock(producto.getInitialStock());
             productoActualizado.setStatusProduct(producto.getStatusProduct());
-            productoActualizado.setCategory(producto.getCategory());
+            productoActualizado.setCategoria(producto.getCategoria());
             productoActualizado.setImage(producto.getImage());
             productoActualizado.setLow(producto.getLow());
             productoActualizado.setSales(producto.getSales());

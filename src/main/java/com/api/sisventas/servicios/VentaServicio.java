@@ -5,12 +5,17 @@ import com.api.sisventas.repositorios.VentaRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class VentaServicio {
     private VentaRepositorio ventaRepositorio;
+
+    private static final Logger logger = LoggerFactory.getLogger(VentaServicio.class);
 
     @Autowired
     public VentaServicio(VentaRepositorio ventaRepositorio){
@@ -25,8 +30,7 @@ public class VentaServicio {
         try {
             return ventaRepositorio.findAll();
         } catch (Exception e) {
-            System.out.println("Error al obtener todos las ventas: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error al obtener todos las ventas: {}", e.getMessage(), e);
             return null;
         }
     }
