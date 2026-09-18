@@ -1,6 +1,6 @@
 # SisVentas — Sales management API
 
-[![Java CI/CD](https://github.com/matosr96/sisventas-api-udc/actions/workflows/ci.yml/badge.svg)](https://github.com/matosr96/sisventas-api-udc/actions/workflows/ci.yml)
+[![Java CI/CD](https://github.com/matosr96/sisventas-api/actions/workflows/ci.yml/badge.svg)](https://github.com/matosr96/sisventas-api/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java Version](https://img.shields.io/badge/Java-17-blue.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 

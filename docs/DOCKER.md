@@ -17,8 +17,8 @@ El `docker-compose.yml` define tres servicios:
 
 ### 1. Clonar el Repositorio
 ```bash
-git clone https://github.com/matosr96/sisventas-api-udc.git
-cd sisventas-api-udc
+git clone https://github.com/matosr96/sisventas-api.git
+cd sisventas-api
 ```
 
 ### 2. Configurar Variables de Entorno
