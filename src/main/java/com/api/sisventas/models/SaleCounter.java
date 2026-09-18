@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 public class SaleCounter {
 
     @Id
-    @Column(name = "year")
+    @Column(name = "counter_year")
     private Integer year;
 
     @Column(name = "last_number", nullable = false)

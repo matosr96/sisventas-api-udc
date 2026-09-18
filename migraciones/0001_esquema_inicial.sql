@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS sales (
 -- Correlativo de facturas, una fila por año. El numero no puede derivarse del id:
 -- con claves IDENTITY el id solo existe despues del INSERT y sale_number es NOT NULL.
 CREATE TABLE IF NOT EXISTS sale_counters (
-  year INT PRIMARY KEY,
+  counter_year INT PRIMARY KEY,
   last_number BIGINT NOT NULL
 ) ENGINE=InnoDB;
 
