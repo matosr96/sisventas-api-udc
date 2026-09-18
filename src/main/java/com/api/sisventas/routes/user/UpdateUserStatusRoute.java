@@ -1,7 +1,7 @@
 package com.api.sisventas.routes.user;
 
 import com.api.sisventas.businessLogic.user.UpdateUserStatus;
-import com.api.sisventas.models.dtos.auth.UserResponse;
+import com.api.sisventas.models.dtos.user.UserResponse;
 import com.api.sisventas.models.dtos.user.UpdateUserStatusRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,8 +21,8 @@ public class UpdateUserStatusRoute {
         this.updateUserStatus = updateUserStatus;
     }
 
-    @Operation(summary = "Activar o desactivar usuario",
-            description = "Una cuenta INACTIVE no puede entrar; solo ADMIN")
+    @Operation(summary = "Activate or deactivate user",
+            description = "An INACTIVE account cannot sign in nor use a live token; ADMIN only")
     @PutMapping("/api/v1/users/{id}/status")
     public UserResponse handle(@PathVariable Long id, @Valid @RequestBody UpdateUserStatusRequest request) {
         return updateUserStatus.execute(id, request);

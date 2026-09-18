@@ -19,7 +19,8 @@ public class DeleteProductRoute {
         this.deleteProduct = deleteProduct;
     }
 
-    @Operation(summary = "Eliminar producto", description = "Elimina un producto por su id")
+    @Operation(summary = "Delete product",
+            description = "Deletes a product, or deactivates it if it has ledger entries")
     @DeleteMapping("/api/v1/products/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void handle(@PathVariable Long id) {

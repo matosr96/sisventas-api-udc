@@ -18,7 +18,7 @@ public class GetSaleRoute {
         this.getSale = getSale;
     }
 
-    @Operation(summary = "Obtener venta", description = "Devuelve una venta por su id")
+    @Operation(summary = "Get sale", description = "Returns a sale with its line items")
     @GetMapping("/api/v1/sales/{id}")
     public SaleResponse handle(@PathVariable Long id) {
         return getSale.execute(id);

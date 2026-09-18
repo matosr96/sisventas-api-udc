@@ -26,7 +26,7 @@ public record PurchaseResponse(
                 purchase.getSupplier().getId(),
                 purchase.getSupplier().getName(),
                 purchase.getTotal(),
-                purchase.getUser() == null ? null : purchase.getUser().getId(),
+                purchase.getUser().getId(),
                 purchase.getItems().stream().map(PurchaseItemResponse::from).toList(),
                 purchase.getCreatedAt(),
                 purchase.getUpdatedAt());

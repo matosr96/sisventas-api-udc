@@ -18,7 +18,7 @@ public class GetSupplierRoute {
         this.getSupplier = getSupplier;
     }
 
-    @Operation(summary = "Obtener proveedor", description = "Devuelve un proveedor por su id")
+    @Operation(summary = "Get supplier", description = "Returns a supplier by id")
     @GetMapping("/api/v1/suppliers/{id}")
     public SupplierResponse handle(@PathVariable Long id) {
         return getSupplier.execute(id);

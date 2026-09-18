@@ -37,6 +37,7 @@ public class Product {
     @Column(name = "name", nullable = false, length = 120)
     private String name;
 
+    /** Último costo pagado: lo actualiza cada compra registrada. Nulo hasta la primera. */
     @Column(name = "purchase_price", precision = 12, scale = 2)
     private BigDecimal purchasePrice;
 

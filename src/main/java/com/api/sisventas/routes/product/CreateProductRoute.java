@@ -22,7 +22,8 @@ public class CreateProductRoute {
         this.createProduct = createProduct;
     }
 
-    @Operation(summary = "Crear producto", description = "Crea un producto a nombre del usuario autenticado")
+    @Operation(summary = "Create product",
+            description = "Creates a product; stock enters the ledger as an INITIAL entry")
     @PostMapping("/api/v1/products")
     @ResponseStatus(HttpStatus.CREATED)
     public ProductResponse handle(@Valid @RequestBody CreateProductRequest request) {

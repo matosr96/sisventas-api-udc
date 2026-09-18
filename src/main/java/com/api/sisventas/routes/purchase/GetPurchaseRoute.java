@@ -18,7 +18,7 @@ public class GetPurchaseRoute {
         this.getPurchase = getPurchase;
     }
 
-    @Operation(summary = "Obtener compra", description = "Devuelve una compra con sus líneas")
+    @Operation(summary = "Get purchase", description = "Returns a purchase with its line items")
     @GetMapping("/api/v1/purchases/{id}")
     public PurchaseResponse handle(@PathVariable Long id) {
         return getPurchase.execute(id);

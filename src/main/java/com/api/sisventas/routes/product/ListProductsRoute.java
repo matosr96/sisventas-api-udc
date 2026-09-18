@@ -20,7 +20,7 @@ public class ListProductsRoute {
         this.listProducts = listProducts;
     }
 
-    @Operation(summary = "Listar productos", description = "Listado paginado { count, page, pages, items }")
+    @Operation(summary = "List products", description = "Paginated list { count, page, pages, items }")
     @GetMapping("/api/v1/products")
     public PaginatedResponse<ProductResponse> handle(
             @RequestParam(defaultValue = "1") int page,

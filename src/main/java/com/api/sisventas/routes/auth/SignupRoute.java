@@ -22,7 +22,7 @@ public class SignupRoute {
         this.signupUser = signupUser;
     }
 
-    @Operation(summary = "Registrar usuario", description = "Crea un usuario con rol USER y devuelve su token")
+    @Operation(summary = "Sign up", description = "Creates a user with the USER role and returns its token")
     @PostMapping("/api/v1/auth/signup")
     @ResponseStatus(HttpStatus.CREATED)
     public AuthResponse handle(@Valid @RequestBody SignupRequest request) {

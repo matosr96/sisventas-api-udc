@@ -22,7 +22,7 @@ public class CreateSupplierRoute {
         this.createSupplier = createSupplier;
     }
 
-    @Operation(summary = "Crear proveedor", description = "Da de alta un proveedor")
+    @Operation(summary = "Create supplier", description = "Creates a supplier")
     @PostMapping("/api/v1/suppliers")
     @ResponseStatus(HttpStatus.CREATED)
     public SupplierResponse handle(@Valid @RequestBody CreateSupplierRequest request) {

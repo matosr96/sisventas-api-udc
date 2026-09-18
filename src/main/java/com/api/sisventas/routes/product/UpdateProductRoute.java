@@ -21,7 +21,7 @@ public class UpdateProductRoute {
         this.updateProduct = updateProduct;
     }
 
-    @Operation(summary = "Actualizar producto", description = "Actualización parcial: solo los campos presentes")
+    @Operation(summary = "Update product", description = "Partial update: only the fields present")
     @PutMapping("/api/v1/products/{id}")
     public ProductResponse handle(@PathVariable Long id, @Valid @RequestBody UpdateProductRequest request) {
         return updateProduct.execute(id, request);

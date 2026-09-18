@@ -5,7 +5,7 @@ import com.api.sisventas.common.DomainError;
 import com.api.sisventas.common.ErrorCodes;
 import com.api.sisventas.dataSources.UserRepository;
 import com.api.sisventas.models.User;
-import com.api.sisventas.models.dtos.auth.UserResponse;
+import com.api.sisventas.models.dtos.user.UserResponse;
 import com.api.sisventas.models.dtos.user.UpdateUserStatusRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

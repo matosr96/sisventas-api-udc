@@ -1,6 +1,7 @@
 package com.api.sisventas.models.dtos.sale;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.NotEmpty;
 
 import java.time.Instant;
@@ -11,6 +12,6 @@ import java.util.List;
  * servidor lo aceptaba sin comprobar nada.
  */
 public record CreateSaleRequest(
-        Instant saleDate,
+        @PastOrPresent Instant saleDate,
         @NotEmpty @Valid List<SaleItemRequest> items) {
 }

@@ -19,7 +19,7 @@ public class DeleteSupplierRoute {
         this.deleteSupplier = deleteSupplier;
     }
 
-    @Operation(summary = "Eliminar proveedor", description = "Elimina un proveedor, o lo desactiva si tiene compras")
+    @Operation(summary = "Delete supplier", description = "Deletes a supplier, or deactivates it if it has purchases")
     @DeleteMapping("/api/v1/suppliers/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void handle(@PathVariable Long id) {

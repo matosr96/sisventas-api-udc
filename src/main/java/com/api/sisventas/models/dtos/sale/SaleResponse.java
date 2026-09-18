@@ -22,7 +22,7 @@ public record SaleResponse(
                 sale.getSaleNumber(),
                 sale.getSaleDate(),
                 sale.getTotal(),
-                sale.getUser() == null ? null : sale.getUser().getId(),
+                sale.getUser().getId(),
                 sale.getItems().stream().map(SaleItemResponse::from).toList(),
                 sale.getCreatedAt(),
                 sale.getUpdatedAt());

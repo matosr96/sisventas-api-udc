@@ -19,7 +19,8 @@ public class DeletePurchaseRoute {
         this.deletePurchase = deletePurchase;
     }
 
-    @Operation(summary = "Anular compra", description = "Anula la compra y retira del stock lo que había sumado")
+    @Operation(summary = "Void purchase",
+            description = "Voids the purchase and removes its units from stock; refused if they were already sold")
     @DeleteMapping("/api/v1/purchases/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void handle(@PathVariable Long id) {

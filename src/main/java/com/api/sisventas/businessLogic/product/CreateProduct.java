@@ -56,7 +56,8 @@ public class CreateProduct {
         }
         Product saved = save(product);
         if (request.initialStock() > 0) {
-            recordStockMovement.execute(saved, StockMovementType.INITIAL, request.initialStock(), null, null, creator);
+            recordStockMovement.execute(
+                    saved.getId(), StockMovementType.INITIAL, request.initialStock(), null, null, creator);
         }
         return ProductResponse.from(saved);
     }

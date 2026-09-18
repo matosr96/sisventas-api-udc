@@ -5,12 +5,13 @@ import com.api.sisventas.businessLogic.document.NextDocumentNumber;
 import com.api.sisventas.businessLogic.inventory.RecordStockMovement;
 import com.api.sisventas.common.DomainError;
 import com.api.sisventas.common.ErrorCodes;
-import com.api.sisventas.dataSources.ProductRepository;
 import com.api.sisventas.dataSources.SaleRepository;
 import com.api.sisventas.models.DocumentKind;
 import com.api.sisventas.models.Product;
+import com.api.sisventas.models.ProductStatus;
 import com.api.sisventas.models.Sale;
 import com.api.sisventas.models.SaleItem;
+import com.api.sisventas.models.StockMovement;
 import com.api.sisventas.models.StockMovementType;
 import com.api.sisventas.models.User;
 import com.api.sisventas.models.dtos.sale.CreateSaleRequest;
@@ -31,18 +32,15 @@ import java.time.Instant;
 public class CreateSale {
 
     private final SaleRepository saleRepository;
-    private final ProductRepository productRepository;
     private final GetAuthenticatedUser getAuthenticatedUser;
     private final NextDocumentNumber nextDocumentNumber;
     private final RecordStockMovement recordStockMovement;
 
     public CreateSale(SaleRepository saleRepository,
-                      ProductRepository productRepository,
                       GetAuthenticatedUser getAuthenticatedUser,
                       NextDocumentNumber nextDocumentNumber,
                       RecordStockMovement recordStockMovement) {
         this.saleRepository = saleRepository;
-        this.productRepository = productRepository;
         this.getAuthenticatedUser = getAuthenticatedUser;
         this.nextDocumentNumber = nextDocumentNumber;
         this.recordStockMovement = recordStockMovement;
@@ -67,10 +65,14 @@ public class CreateSale {
         return SaleResponse.from(saleRepository.save(sale));
     }
 
+    /** El libro carga el producto con bloqueo: por eso no se consulta antes por aquí. */
     private SaleItem buildItem(SaleItemRequest line, String saleNumber, User seller) {
-        Product product = productRepository.findById(line.productId())
-                .orElseThrow(() -> new DomainError(ErrorCodes.PRODUCT_NOT_FOUND));
-        recordStockMovement.execute(product, StockMovementType.SALE, -line.quantity(), saleNumber, null, seller);
+        StockMovement movement = recordStockMovement.execute(
+                line.productId(), StockMovementType.SALE, -line.quantity(), saleNumber, null, seller);
+        Product product = movement.getProduct();
+        if (product.getStatus() != ProductStatus.ACTIVE) {
+            throw new DomainError(ErrorCodes.PRODUCT_INACTIVE);
+        }
 
         SaleItem item = new SaleItem();
         item.setProduct(product);

@@ -6,7 +6,7 @@ import com.api.sisventas.dataSources.UserRepository;
 import com.api.sisventas.models.User;
 import com.api.sisventas.models.dtos.auth.AuthResponse;
 import com.api.sisventas.models.dtos.auth.SigninRequest;
-import com.api.sisventas.models.dtos.auth.UserResponse;
+import com.api.sisventas.models.dtos.user.UserResponse;
 import com.api.sisventas.security.JwtGenerator;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

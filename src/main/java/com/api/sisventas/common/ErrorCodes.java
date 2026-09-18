@@ -19,6 +19,7 @@ public final class ErrorCodes {
     public static final String USER_NOT_FOUND = "604";
     public static final String SUPPLIER_NOT_FOUND = "605";
     public static final String PURCHASE_NOT_FOUND = "606";
+    public static final String PRODUCT_INACTIVE = "607";
 
     public static final String USERNAME_ALREADY_EXISTS = "610";
     public static final String INVALID_CREDENTIALS = "611";
@@ -50,6 +51,7 @@ public final class ErrorCodes {
             Map.entry(USER_NOT_FOUND, HttpStatus.NOT_FOUND),
             Map.entry(SUPPLIER_NOT_FOUND, HttpStatus.NOT_FOUND),
             Map.entry(PURCHASE_NOT_FOUND, HttpStatus.NOT_FOUND),
+            Map.entry(PRODUCT_INACTIVE, HttpStatus.CONFLICT),
             Map.entry(USERNAME_ALREADY_EXISTS, HttpStatus.CONFLICT),
             Map.entry(INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED),
             Map.entry(DEFAULT_ROLE_MISSING, HttpStatus.INTERNAL_SERVER_ERROR),

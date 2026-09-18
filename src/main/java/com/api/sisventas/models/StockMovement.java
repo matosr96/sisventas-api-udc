@@ -57,8 +57,8 @@ public class StockMovement {
     @Column(name = "reason", length = 255)
     private String reason;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @CreationTimestamp

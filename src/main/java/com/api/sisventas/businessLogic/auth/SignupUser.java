@@ -10,7 +10,7 @@ import com.api.sisventas.models.RoleName;
 import com.api.sisventas.models.User;
 import com.api.sisventas.models.dtos.auth.AuthResponse;
 import com.api.sisventas.models.dtos.auth.SignupRequest;
-import com.api.sisventas.models.dtos.auth.UserResponse;
+import com.api.sisventas.models.dtos.user.UserResponse;
 import com.api.sisventas.security.JwtGenerator;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;

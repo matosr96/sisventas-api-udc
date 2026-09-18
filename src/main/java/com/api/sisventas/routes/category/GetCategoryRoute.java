@@ -18,7 +18,7 @@ public class GetCategoryRoute {
         this.getCategory = getCategory;
     }
 
-    @Operation(summary = "Obtener categoría", description = "Devuelve una categoría por su id")
+    @Operation(summary = "Get category", description = "Returns a category by id")
     @GetMapping("/api/v1/categories/{id}")
     public CategoryResponse handle(@PathVariable Long id) {
         return getCategory.execute(id);

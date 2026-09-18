@@ -21,8 +21,8 @@ public class ListStockMovementsRoute {
         this.listStockMovements = listStockMovements;
     }
 
-    @Operation(summary = "Libro de stock de un producto",
-            description = "Asientos paginados, del más reciente al más antiguo")
+    @Operation(summary = "Product stock ledger",
+            description = "Paginated entries, newest first")
     @GetMapping("/api/v1/products/{id}/movements")
     public PaginatedResponse<StockMovementResponse> handle(
             @PathVariable Long id,

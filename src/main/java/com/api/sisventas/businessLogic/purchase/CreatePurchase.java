@@ -5,13 +5,14 @@ import com.api.sisventas.businessLogic.document.NextDocumentNumber;
 import com.api.sisventas.businessLogic.inventory.RecordStockMovement;
 import com.api.sisventas.common.DomainError;
 import com.api.sisventas.common.ErrorCodes;
-import com.api.sisventas.dataSources.ProductRepository;
 import com.api.sisventas.dataSources.PurchaseRepository;
 import com.api.sisventas.dataSources.SupplierRepository;
 import com.api.sisventas.models.DocumentKind;
 import com.api.sisventas.models.Product;
+import com.api.sisventas.models.ProductStatus;
 import com.api.sisventas.models.Purchase;
 import com.api.sisventas.models.PurchaseItem;
+import com.api.sisventas.models.StockMovement;
 import com.api.sisventas.models.StockMovementType;
 import com.api.sisventas.models.Supplier;
 import com.api.sisventas.models.SupplierStatus;
@@ -34,20 +35,17 @@ public class CreatePurchase {
 
     private final PurchaseRepository purchaseRepository;
     private final SupplierRepository supplierRepository;
-    private final ProductRepository productRepository;
     private final GetAuthenticatedUser getAuthenticatedUser;
     private final NextDocumentNumber nextDocumentNumber;
     private final RecordStockMovement recordStockMovement;
 
     public CreatePurchase(PurchaseRepository purchaseRepository,
                           SupplierRepository supplierRepository,
-                          ProductRepository productRepository,
                           GetAuthenticatedUser getAuthenticatedUser,
                           NextDocumentNumber nextDocumentNumber,
                           RecordStockMovement recordStockMovement) {
         this.purchaseRepository = purchaseRepository;
         this.supplierRepository = supplierRepository;
-        this.productRepository = productRepository;
         this.getAuthenticatedUser = getAuthenticatedUser;
         this.nextDocumentNumber = nextDocumentNumber;
         this.recordStockMovement = recordStockMovement;
@@ -77,10 +75,16 @@ public class CreatePurchase {
         return PurchaseResponse.from(purchaseRepository.save(purchase));
     }
 
+    /** El libro carga el producto con bloqueo: por eso no se consulta antes por aquí. */
     private PurchaseItem buildItem(PurchaseItemRequest line, String purchaseNumber, User buyer) {
-        Product product = productRepository.findById(line.productId())
-                .orElseThrow(() -> new DomainError(ErrorCodes.PRODUCT_NOT_FOUND));
-        recordStockMovement.execute(product, StockMovementType.PURCHASE, line.quantity(), purchaseNumber, null, buyer);
+        StockMovement movement = recordStockMovement.execute(
+                line.productId(), StockMovementType.PURCHASE, line.quantity(), purchaseNumber, null, buyer);
+        Product product = movement.getProduct();
+        if (product.getStatus() != ProductStatus.ACTIVE) {
+            throw new DomainError(ErrorCodes.PRODUCT_INACTIVE);
+        }
+        // purchasePrice es el último costo pagado: cada compra lo actualiza.
+        product.setPurchasePrice(line.unitCost());
 
         PurchaseItem item = new PurchaseItem();
         item.setProduct(product);

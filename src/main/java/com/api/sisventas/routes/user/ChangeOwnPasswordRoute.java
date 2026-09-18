@@ -21,7 +21,7 @@ public class ChangeOwnPasswordRoute {
         this.changeOwnPassword = changeOwnPassword;
     }
 
-    @Operation(summary = "Cambiar mi contraseña", description = "Exige la contraseña actual")
+    @Operation(summary = "Change my password", description = "Requires the current password")
     @PutMapping("/api/v1/users/me/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void handle(@Valid @RequestBody ChangePasswordRequest request) {

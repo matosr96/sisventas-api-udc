@@ -22,7 +22,7 @@ public class CreateCategoryRoute {
         this.createCategory = createCategory;
     }
 
-    @Operation(summary = "Crear categoría", description = "Crea una categoría a nombre del usuario autenticado")
+    @Operation(summary = "Create category", description = "Creates a category")
     @PostMapping("/api/v1/categories")
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponse handle(@Valid @RequestBody CreateCategoryRequest request) {

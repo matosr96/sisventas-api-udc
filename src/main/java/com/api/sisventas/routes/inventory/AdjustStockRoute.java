@@ -23,7 +23,8 @@ public class AdjustStockRoute {
         this.adjustStock = adjustStock;
     }
 
-    @Operation(summary = "Ajustar stock", description = "Suma o resta unidades con motivo obligatorio y deja asiento")
+    @Operation(summary = "Adjust stock",
+            description = "Adds or removes units with a mandatory reason, leaving a ledger entry")
     @PostMapping("/api/v1/products/{id}/adjustments")
     @ResponseStatus(HttpStatus.CREATED)
     public StockMovementResponse handle(@PathVariable Long id, @Valid @RequestBody AdjustStockRequest request) {

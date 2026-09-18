@@ -1,7 +1,7 @@
 package com.api.sisventas.routes.user;
 
 import com.api.sisventas.businessLogic.user.GetUser;
-import com.api.sisventas.models.dtos.auth.UserResponse;
+import com.api.sisventas.models.dtos.user.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +18,7 @@ public class GetUserRoute {
         this.getUser = getUser;
     }
 
-    @Operation(summary = "Obtener usuario", description = "Devuelve un usuario por su id; solo ADMIN")
+    @Operation(summary = "Get user", description = "Returns a user by id; ADMIN only")
     @GetMapping("/api/v1/users/{id}")
     public UserResponse handle(@PathVariable Long id) {
         return getUser.execute(id);

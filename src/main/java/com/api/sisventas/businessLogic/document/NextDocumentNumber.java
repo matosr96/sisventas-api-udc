@@ -30,8 +30,10 @@ public class NextDocumentNumber {
     public String execute(DocumentKind kind, Instant documentDate) {
         int year = documentDate.atZone(ZoneOffset.UTC).getYear();
         String counterId = kind.prefix() + "-" + year;
+        // Solo lectura con bloqueo: el contador lo siembra SeedDocumentCounters, nunca este camino.
         DocumentCounter counter = documentCounterRepository.findOneById(counterId)
-                .orElseGet(() -> new DocumentCounter(counterId, 0L));
+                .orElseThrow(() -> new IllegalStateException(
+                        "No existe el contador " + counterId + ": la siembra de arranque no corrió"));
         counter.setLastNumber(counter.getLastNumber() + 1);
         documentCounterRepository.save(counter);
         return String.format(FORMAT, kind.prefix(), year, counter.getLastNumber());

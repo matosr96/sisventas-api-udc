@@ -19,7 +19,7 @@ public class DeleteSaleRoute {
         this.deleteSale = deleteSale;
     }
 
-    @Operation(summary = "Eliminar venta", description = "Elimina una venta por su id")
+    @Operation(summary = "Void sale", description = "Voids the sale and returns its units to stock")
     @DeleteMapping("/api/v1/sales/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void handle(@PathVariable Long id) {

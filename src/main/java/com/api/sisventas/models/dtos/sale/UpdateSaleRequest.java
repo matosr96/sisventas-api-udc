@@ -1,5 +1,7 @@
 package com.api.sisventas.models.dtos.sale;
 
+import jakarta.validation.constraints.PastOrPresent;
+
 import java.time.Instant;
 
 /**
@@ -7,5 +9,5 @@ import java.time.Instant;
  * inmutables: cambiarlos significaría reescribir una factura y descuadrar el stock.
  * Para rectificar una venta se elimina (devuelve el stock) y se registra de nuevo.
  */
-public record UpdateSaleRequest(Instant saleDate) {
+public record UpdateSaleRequest(@PastOrPresent Instant saleDate) {
 }

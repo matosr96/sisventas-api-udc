@@ -21,7 +21,7 @@ public class UpdatePurchaseRoute {
         this.updatePurchase = updatePurchase;
     }
 
-    @Operation(summary = "Actualizar compra", description = "Solo corrige la fecha: líneas y total son inmutables")
+    @Operation(summary = "Update purchase", description = "Corrects the date only: line items and total are immutable")
     @PutMapping("/api/v1/purchases/{id}")
     public PurchaseResponse handle(@PathVariable Long id, @Valid @RequestBody UpdatePurchaseRequest request) {
         return updatePurchase.execute(id, request);

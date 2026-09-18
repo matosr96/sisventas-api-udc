@@ -34,7 +34,7 @@ public class DeleteSale {
                 .orElseThrow(() -> new DomainError(ErrorCodes.SALE_NOT_FOUND));
         User actor = getAuthenticatedUser.execute();
         for (SaleItem item : sale.getItems()) {
-            recordStockMovement.execute(item.getProduct(), StockMovementType.SALE_VOID,
+            recordStockMovement.execute(item.getProduct().getId(), StockMovementType.SALE_VOID,
                     item.getQuantity(), sale.getSaleNumber(), null, actor);
         }
         saleRepository.delete(sale);

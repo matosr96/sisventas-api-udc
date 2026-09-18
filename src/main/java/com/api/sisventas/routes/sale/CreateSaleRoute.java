@@ -22,7 +22,8 @@ public class CreateSaleRoute {
         this.createSale = createSale;
     }
 
-    @Operation(summary = "Crear venta", description = "Registra una venta a nombre del usuario autenticado")
+    @Operation(summary = "Register sale",
+            description = "Registers a sale: freezes unit prices, decrements stock and computes the total")
     @PostMapping("/api/v1/sales")
     @ResponseStatus(HttpStatus.CREATED)
     public SaleResponse handle(@Valid @RequestBody CreateSaleRequest request) {

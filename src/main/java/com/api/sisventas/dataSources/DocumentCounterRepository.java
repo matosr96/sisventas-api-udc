@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface DocumentCounterRepository extends JpaRepository<DocumentCounter, String> {
 
+
     /** Bloqueo pesimista: serializa la toma del correlativo entre documentos simultáneos. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<DocumentCounter> findOneById(String id);

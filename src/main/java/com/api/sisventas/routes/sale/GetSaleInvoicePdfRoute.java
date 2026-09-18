@@ -24,7 +24,7 @@ public class GetSaleInvoicePdfRoute {
         this.getSale = getSale;
     }
 
-    @Operation(summary = "Factura en PDF", description = "Devuelve la factura de la venta como application/pdf")
+    @Operation(summary = "Invoice PDF", description = "Returns the sale invoice as application/pdf")
     @GetMapping(value = "/api/v1/sales/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> handle(@PathVariable Long id) {
         String fileName = getSale.execute(id).saleNumber() + ".pdf";

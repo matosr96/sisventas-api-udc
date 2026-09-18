@@ -22,8 +22,9 @@ public class CreatePurchaseRoute {
         this.createPurchase = createPurchase;
     }
 
-    @Operation(summary = "Registrar compra",
-            description = "Registra una compra a proveedor: suma stock y congela el costo")
+    @Operation(summary = "Register purchase",
+            description = "Registers a supplier purchase: adds stock, freezes the unit cost "
+                    + "and updates the product's last cost")
     @PostMapping("/api/v1/purchases")
     @ResponseStatus(HttpStatus.CREATED)
     public PurchaseResponse handle(@Valid @RequestBody CreatePurchaseRequest request) {

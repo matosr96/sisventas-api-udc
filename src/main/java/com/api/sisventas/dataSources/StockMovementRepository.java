@@ -10,4 +10,7 @@ import org.springframework.stereotype.Repository;
 public interface StockMovementRepository extends JpaRepository<StockMovement, Long> {
 
     Page<StockMovement> findByProductId(Long productId, Pageable pageable);
+
+    /** Un producto con asientos tiene histórico: se desactiva, no se borra. */
+    boolean existsByProductId(Long productId);
 }

@@ -19,7 +19,7 @@ public class DeleteCategoryRoute {
         this.deleteCategory = deleteCategory;
     }
 
-    @Operation(summary = "Eliminar categoría", description = "Elimina una categoría por su id")
+    @Operation(summary = "Delete category", description = "Deletes a category; refused while it still has products")
     @DeleteMapping("/api/v1/categories/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void handle(@PathVariable Long id) {

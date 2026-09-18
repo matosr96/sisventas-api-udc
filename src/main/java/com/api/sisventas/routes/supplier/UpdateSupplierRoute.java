@@ -21,7 +21,7 @@ public class UpdateSupplierRoute {
         this.updateSupplier = updateSupplier;
     }
 
-    @Operation(summary = "Actualizar proveedor", description = "Actualización parcial: solo los campos presentes")
+    @Operation(summary = "Update supplier", description = "Partial update: only the fields present")
     @PutMapping("/api/v1/suppliers/{id}")
     public SupplierResponse handle(@PathVariable Long id, @Valid @RequestBody UpdateSupplierRequest request) {
         return updateSupplier.execute(id, request);

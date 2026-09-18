@@ -1,7 +1,7 @@
 package com.api.sisventas.businessLogic.user;
 
 import com.api.sisventas.businessLogic.auth.GetAuthenticatedUser;
-import com.api.sisventas.models.dtos.auth.UserResponse;
+import com.api.sisventas.models.dtos.user.UserResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

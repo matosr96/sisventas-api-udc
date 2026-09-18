@@ -25,7 +25,7 @@ public record StockMovementResponse(
                 movement.getStockAfter(),
                 movement.getReference(),
                 movement.getReason(),
-                movement.getUser() == null ? null : movement.getUser().getId(),
+                movement.getUser().getId(),
                 movement.getCreatedAt());
     }
 }

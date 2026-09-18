@@ -1,7 +1,7 @@
 package com.api.sisventas.routes.user;
 
 import com.api.sisventas.businessLogic.user.UpdateUserRoles;
-import com.api.sisventas.models.dtos.auth.UserResponse;
+import com.api.sisventas.models.dtos.user.UserResponse;
 import com.api.sisventas.models.dtos.user.UpdateUserRolesRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +21,7 @@ public class UpdateUserRolesRoute {
         this.updateUserRoles = updateUserRoles;
     }
 
-    @Operation(summary = "Asignar roles", description = "Reemplaza los roles de un usuario; solo ADMIN")
+    @Operation(summary = "Assign roles", description = "Replaces a user's role set; ADMIN only")
     @PutMapping("/api/v1/users/{id}/roles")
     public UserResponse handle(@PathVariable Long id, @Valid @RequestBody UpdateUserRolesRequest request) {
         return updateUserRoles.execute(id, request);

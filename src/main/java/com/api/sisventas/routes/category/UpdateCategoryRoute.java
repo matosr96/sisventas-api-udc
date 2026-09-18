@@ -21,7 +21,7 @@ public class UpdateCategoryRoute {
         this.updateCategory = updateCategory;
     }
 
-    @Operation(summary = "Actualizar categoría", description = "Actualización parcial: solo los campos presentes")
+    @Operation(summary = "Update category", description = "Partial update: only the fields present")
     @PutMapping("/api/v1/categories/{id}")
     public CategoryResponse handle(@PathVariable Long id, @Valid @RequestBody UpdateCategoryRequest request) {
         return updateCategory.execute(id, request);

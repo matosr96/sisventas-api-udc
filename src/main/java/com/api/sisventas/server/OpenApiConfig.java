@@ -30,9 +30,9 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI openApi() {
         Info info = new Info()
-                .title("API de Sistema de Ventas")
+                .title("SisVentas — Sales management API")
                 .version("1.0")
-                .description("Errores de dominio: ver la tabla de códigos en el README.")
+                .description("Every error answers {\"message\": \"<code>\"}; the code table lives in the README.")
                 .license(new License().name("MIT").url("https://opensource.org/licenses/MIT"));
 
         SecurityScheme bearer = new SecurityScheme()
@@ -43,8 +43,8 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(info)
                 .servers(List.of(
-                        new Server().url(devUrl).description("Desarrollo"),
-                        new Server().url(prodUrl).description("Producción")))
+                        new Server().url(devUrl).description("Development"),
+                        new Server().url(prodUrl).description("Production")))
                 .components(new Components().addSecuritySchemes(BEARER_SCHEME, bearer))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_SCHEME));
     }

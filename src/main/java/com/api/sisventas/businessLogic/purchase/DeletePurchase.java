@@ -38,7 +38,7 @@ public class DeletePurchase {
                 .orElseThrow(() -> new DomainError(ErrorCodes.PURCHASE_NOT_FOUND));
         User actor = getAuthenticatedUser.execute();
         for (PurchaseItem item : purchase.getItems()) {
-            recordStockMovement.execute(item.getProduct(), StockMovementType.PURCHASE_VOID,
+            recordStockMovement.execute(item.getProduct().getId(), StockMovementType.PURCHASE_VOID,
                     -item.getQuantity(), purchase.getPurchaseNumber(), null, actor);
         }
         purchaseRepository.delete(purchase);

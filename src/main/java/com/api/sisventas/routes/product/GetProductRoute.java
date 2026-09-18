@@ -18,7 +18,7 @@ public class GetProductRoute {
         this.getProduct = getProduct;
     }
 
-    @Operation(summary = "Obtener producto", description = "Devuelve un producto por su id")
+    @Operation(summary = "Get product", description = "Returns a product by id")
     @GetMapping("/api/v1/products/{id}")
     public ProductResponse handle(@PathVariable Long id) {
         return getProduct.execute(id);

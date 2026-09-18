@@ -8,7 +8,7 @@ import com.api.sisventas.dataSources.UserRepository;
 import com.api.sisventas.models.Role;
 import com.api.sisventas.models.RoleName;
 import com.api.sisventas.models.User;
-import com.api.sisventas.models.dtos.auth.UserResponse;
+import com.api.sisventas.models.dtos.user.UserResponse;
 import com.api.sisventas.models.dtos.user.UpdateUserRolesRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

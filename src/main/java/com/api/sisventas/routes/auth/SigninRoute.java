@@ -20,7 +20,7 @@ public class SigninRoute {
         this.signinUser = signinUser;
     }
 
-    @Operation(summary = "Iniciar sesión", description = "Autentica y devuelve el token de acceso")
+    @Operation(summary = "Sign in", description = "Authenticates and returns the access token")
     @PostMapping("/api/v1/auth/signin")
     public AuthResponse handle(@Valid @RequestBody SigninRequest request) {
         return signinUser.execute(request);

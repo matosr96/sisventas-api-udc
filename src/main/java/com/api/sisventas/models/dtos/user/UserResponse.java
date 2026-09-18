@@ -1,4 +1,4 @@
-package com.api.sisventas.models.dtos.auth;
+package com.api.sisventas.models.dtos.user;
 
 import com.api.sisventas.models.Role;
 import com.api.sisventas.models.RoleName;
