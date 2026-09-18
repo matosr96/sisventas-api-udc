@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,15 @@ public class JwtGenerator {
 
     private static final Logger LOG = LoggerFactory.getLogger(JwtGenerator.class);
 
+    /** HS384 exige una clave de al menos 384 bits: 48 bytes. */
+    private static final int MIN_SECRET_LENGTH = 48;
+
+    /**
+     * Valor que arrastraba el repositorio como ejemplo. Está en un repositorio público,
+     * así que firmar con él permitiría a cualquiera forjar tokens: se rechaza de plano.
+     */
+    private static final String LEAKED_SAMPLE_SECRET = "cambia_este_secreto_por_uno_de_al_menos_32_caracteres";
+
     private final String secret;
     private final long expiration;
 
@@ -29,6 +39,26 @@ public class JwtGenerator {
                         @Value("${app.jwt.expiration}") long expiration) {
         this.secret = secret;
         this.expiration = expiration;
+    }
+
+    /**
+     * El secreto no tiene valor por defecto: sin él la aplicación no debe arrancar. Aquí se
+     * rechaza además un secreto demasiado corto o el ejemplo que vivía en el repositorio,
+     * para que un despliegue con un secreto inseguro falle al iniciar en vez de correr indefenso.
+     */
+    @PostConstruct
+    void validateSecret() {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("Falta JWT_SECRET: define un secreto propio para firmar los tokens.");
+        }
+        if (secret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_LENGTH) {
+            throw new IllegalStateException(
+                    "JWT_SECRET demasiado corto: se necesitan al menos " + MIN_SECRET_LENGTH + " bytes.");
+        }
+        if (LEAKED_SAMPLE_SECRET.equals(secret)) {
+            throw new IllegalStateException(
+                    "JWT_SECRET es el ejemplo público del repositorio: usa un secreto propio y no compartido.");
+        }
     }
 
     private SecretKey signingKey() {

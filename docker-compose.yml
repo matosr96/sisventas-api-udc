@@ -7,7 +7,9 @@ services:
       DB_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-bdsisventas}
       DB_USERNAME: ${MYSQL_USER:-sisventas}
       DB_PASSWORD: ${MYSQL_PASSWORD:-sisventas}
-      JWT_SECRET: ${JWT_SECRET:-cambia_este_secreto_por_uno_de_al_menos_32_caracteres}
+      # Sin valor por defecto: exporta JWT_SECRET (>=48 bytes) antes de 'docker compose up'.
+      # Si falta, el servicio app no arranca (JwtGenerator lo valida); 'up -d db' sí funciona.
+      JWT_SECRET: ${JWT_SECRET-}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
     depends_on:
       - db

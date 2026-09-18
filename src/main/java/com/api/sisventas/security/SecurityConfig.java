@@ -31,19 +31,25 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
+    private final JwtAccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final LoginRateLimitFilter loginRateLimitFilter;
 
     private final String allowedOrigins;
     private final String allowedMethods;
     private final String allowedHeaders;
 
     public SecurityConfig(JwtAuthenticationEntryPoint authenticationEntryPoint,
+                          JwtAccessDeniedHandler accessDeniedHandler,
                           JwtAuthenticationFilter jwtAuthenticationFilter,
+                          LoginRateLimitFilter loginRateLimitFilter,
                           @Value("${app.cors.allowed-origins}") String allowedOrigins,
                           @Value("${app.cors.allowed-methods}") String allowedMethods,
                           @Value("${app.cors.allowed-headers}") String allowedHeaders) {
         this.authenticationEntryPoint = authenticationEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.loginRateLimitFilter = loginRateLimitFilter;
         this.allowedOrigins = allowedOrigins;
         this.allowedMethods = allowedMethods;
         this.allowedHeaders = allowedHeaders;
@@ -77,7 +83,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(handling -> handling.authenticationEntryPoint(authenticationEntryPoint))
+                .exceptionHandling(handling -> handling
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler))
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
                         .frameOptions(frame -> frame.deny()))
@@ -95,7 +103,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/**").hasAuthority(SecurityConstants.ROLE_ADMIN)
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/**").hasAuthority(SecurityConstants.ROLE_ADMIN)
                         .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(loginRateLimitFilter, JwtAuthenticationFilter.class);
         return http.build();
     }
 }

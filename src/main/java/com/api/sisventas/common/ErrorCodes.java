@@ -31,6 +31,8 @@ public final class ErrorCodes {
     public static final String INVALID_PAGINATION = "630";
     public static final String INVALID_REQUEST = "631";
 
+    public static final String TOO_MANY_REQUESTS = "640";
+
     public static final String INTEGRITY_VIOLATION = "690";
     public static final String INTERNAL_ERROR = "699";
 
@@ -49,6 +51,7 @@ public final class ErrorCodes {
             Map.entry(CATEGORY_NAME_ALREADY_EXISTS, HttpStatus.CONFLICT),
             Map.entry(INVALID_PAGINATION, HttpStatus.BAD_REQUEST),
             Map.entry(INVALID_REQUEST, HttpStatus.BAD_REQUEST),
+            Map.entry(TOO_MANY_REQUESTS, HttpStatus.TOO_MANY_REQUESTS),
             Map.entry(INTEGRITY_VIOLATION, HttpStatus.CONFLICT),
             Map.entry(INTERNAL_ERROR, HttpStatus.INTERNAL_SERVER_ERROR));
 
