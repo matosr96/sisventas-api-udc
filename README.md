@@ -1,105 +1,91 @@
-# UNIVERSIDAD DE CARTAGENA
-## INGENIERÍA DE SOFTWARE - PROGRAMACIÓN ORIENTADA A OBJETOS
-### TRABAJO COLABORATIVO CONTEXTUALIZADO
-
-# Sistema de Gestión de Ventas (SisVentas)
+# SisVentas — API de gestión de ventas
 
 [![Java CI/CD](https://github.com/matosr96/sisventas-api-udc/actions/workflows/ci.yml/badge.svg)](https://github.com/matosr96/sisventas-api-udc/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java Version](https://img.shields.io/badge/Java-17-blue.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 
-## Descripción
+API REST para un punto de venta pequeño: catálogo de productos, ventas con control de stock
+y trazabilidad de quién hizo qué.
 
-SisVentas es un sistema de gestión de ventas que permite administrar productos, realizar compras y gestionar el inventario. El sistema está diseñado para manejar múltiples productos por factura y mantener un control detallado del stock.
+Es un **proyecto personal**. No está desplegado en ningún sitio y no atiende a nadie: su razón
+de ser es servir de referencia de un estándar de arquitectura concreto —un archivo por
+operación, capas con un solo motivo de cambio, errores como códigos de dominio, esquema
+gobernado por migraciones escritas a mano— aplicado de principio a fin en un dominio que
+duele si se modela mal, el de facturar.
 
-### Características Principales
+## Qué hace
 
-- Gestión de productos y categorías
-- Control de inventario en tiempo real
-- Generación de facturas
-- Seguimiento de compras
-- Gestión de usuarios y roles
-- API RESTful para integración con otros sistemas
-- Autenticación y autorización con JWT
-- Documentación de API con OpenAPI/Swagger
+- **Catálogo**: productos con SKU único, precio de compra y venta, y categorías.
+- **Ventas con líneas**: cada venta guarda qué se vendió, cuántas unidades y **a qué precio se
+  vendió entonces**. Subir un precio no altera las facturas ya emitidas.
+- **Stock real**: vender descuenta unidades en la misma transacción y rechaza la venta si no
+  hay existencias; anularla las devuelve.
+- **Correlativo de factura** por año (`F-2026-000001`).
+- **Usuarios y roles** (`USER`, `ADMIN`) con JWT y una única matriz de autorización.
+- **Auditoría automática** de toda escritura exitosa, sin que las rutas hagan nada.
+- **Contratos uniformes**: paginación `{ count, page, pages, items }` y errores
+  `{ "message": "<código>" }` en toda la API.
+- **OpenAPI/Swagger** en `/swagger-ui.html`.
 
-## Tecnologías Utilizadas
+### Lo que todavía no hace
 
-### Backend
-- Java 17
-- Spring Boot 3.x
-- Spring Security con JWT
-- Spring Data JPA
-- MySQL 8.x
+Para que el alcance quede claro:
 
-### Herramientas de Desarrollo
-- Maven
-- Docker
-- GitHub Actions
-- SonarQube
-- JaCoCo
+- No modela **reposiciones ni compras a proveedor**: el stock solo baja al vender y sube al
+  anular. Por eso `initialStock` es un dato del alta y no se actualiza.
+- No **imprime** facturas: hay número, líneas y totales, pero no PDF ni plantilla.
+- No tiene **gestión de usuarios por API** más allá del alta: los roles se asignan en la base.
+- No hay **despliegue**: el CI construye la imagen Docker pero nadie la publica.
 
-### Dependencias Principales
+## Arranque rápido
 
-- **Spring Boot Starter Data JPA**: Integración con JPA para persistencia de datos
-- **Spring Boot Starter Security**: Implementación de seguridad y autenticación
-- **Spring Boot Starter Web**: Desarrollo de aplicaciones web REST
-- **MySQL Connector/J**: Conexión con base de datos MySQL
-- **Lombok**: Reducción de código boilerplate
-- **jjwt**: Manejo de JSON Web Tokens
-- **jaxb-api**: Procesamiento de XML
-- **springdoc-openapi**: Documentación de API
-- **spring-boot-starter-validation**: Validación de datos
+Con Docker, que trae MySQL:
 
-## Requisitos del Sistema
-
-- Java 17 o superior
-- MySQL 8.x
-- Maven 3.6.x o superior
-- Docker y Docker Compose (opcional)
-- IDE compatible con Java (recomendado: IntelliJ IDEA o Eclipse)
-
-## Configuración del Proyecto
-
-### Desarrollo Local
-
-1. Clona el repositorio:
 ```bash
-git clone https://github.com/matosr96/sisventas-api-udc.git
-cd sisventas-api-udc
-```
-
-2. Configura la base de datos:
-   - Crea una base de datos MySQL
-   - Configura las credenciales en `src/main/resources/application.properties`:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/sisventas
-spring.datasource.username=tu_usuario
-spring.datasource.password=tu_contraseña
-```
-
-3. Compila el proyecto:
-```bash
-./mvnw clean install
-```
-
-4. Ejecuta la aplicación:
-```bash
+docker compose up -d db
+./scripts/db-migrate.sh apply
 ./mvnw spring-boot:run
 ```
 
-### Usando Docker
+Sin Docker, con un MySQL 8 propio:
 
-1. Construye y ejecuta los contenedores:
 ```bash
-docker-compose up -d
+export DB_URL="jdbc:mysql://localhost:3306/bdsisventas"
+export DB_USERNAME=root DB_PASSWORD=...
+export JWT_SECRET="una_cadena_de_al_menos_32_caracteres"
+./scripts/db-migrate.sh apply
+./mvnw spring-boot:run
 ```
 
-2. Accede a la aplicación:
-   - API: http://localhost:8080
-   - phpMyAdmin: http://localhost:8081
+Comprobar que responde y sacar un token:
 
-## Estructura del Proyecto
+```bash
+curl -s localhost:8080/actuator/health
+
+TOKEN=$(curl -s -X POST localhost:8080/api/v1/auth/signup \
+  -H 'Content-Type: application/json' \
+  -d '{"firstName":"Edgar","lastName":"Matos","username":"matos","password":"12345678"}' \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)["accessToken"])')
+
+curl -s localhost:8080/api/v1/products -H "Authorization: Bearer $TOKEN"
+```
+
+El usuario nace con rol `USER`: puede leer y registrar ventas. Para tocar el catálogo hace
+falta `ADMIN`, que se asigna en la tabla `users_roles`.
+
+La configuración va por entorno, nunca en el repositorio: `DB_URL`, `DB_USERNAME`,
+`DB_PASSWORD`, `JWT_SECRET` (mínimo 32 caracteres), `CORS_ORIGINS`, `PORT`.
+
+## Stack
+
+Java 17 · Spring Boot 3.2 · Spring Security con JWT (jjwt 0.11.5) · Spring Data JPA · MySQL 8 ·
+springdoc-openapi · Lombok.
+
+Herramientas: Maven (wrapper incluido), Docker Compose, GitHub Actions, Checkstyle, JaCoCo.
+
+Requisitos: Java 17+ y MySQL 8, o solo Docker.
+
+## Estructura del proyecto
 
 Arquitectura por capas con **un archivo por operación**, siguiendo el estándar de Orienta
 (`.claude/rules/convenciones.md`). El código va en inglés; los comentarios y la documentación, en español.
@@ -257,55 +243,36 @@ Decisiones del modelo que no son evidentes leyendo solo los endpoints:
 
 Toda escritura exitosa queda registrada en la tabla `audits` con usuario, método y recurso.
 
-
 ## Pruebas
 
-### Pruebas Unitarias
 ```bash
-./mvnw test
+./mvnw test      # levanta el contexto contra H2 en memoria: no necesita MySQL ni Docker
+./mvnw package   # compila, pasa Checkstyle y ejecuta las pruebas
+./mvnw test jacoco:report   # cobertura en target/site/jacoco
 ```
 
-### Pruebas de Integración
-```bash
-./mvnw verify
-```
+La cobertura es mínima: hay una prueba de contexto y poco más. Las migraciones **no** se
+ejecutan en las pruebas, así que un error en el SQL solo aparece al arrancar contra MySQL de
+verdad, donde `ddl-auto=validate` compara el esquema con las entidades.
 
-### Cobertura de Código
-```bash
-./mvnw test jacoco:report
-```
+## Calidad y CI
 
-## Calidad de Código
+Checkstyle corre en la fase `validate` de cada build y el proyecto está en cero avisos.
+JaCoCo genera el informe de cobertura tras los tests. El plugin de SonarQube está declarado
+en el `pom.xml` para quien quiera apuntarlo a un servidor propio (`./mvnw sonar:sonar`), pero
+el CI no lo ejecuta.
 
-El proyecto utiliza varias herramientas para mantener la calidad del código:
+El workflow de GitHub Actions compila con Maven, corre las pruebas, sube los resultados,
+construye la imagen Docker y pasa un escaneo de seguridad con Snyk (requiere el secret
+`SNYK_TOKEN`; sin él, ese paso falla).
 
-- **Checkstyle**: Para mantener estándares de código
-- **PMD**: Para análisis estático de código
-- **JaCoCo**: Para cobertura de pruebas
-- **SonarQube**: Para análisis de calidad
+## Documentación relacionada
 
-## CI/CD
-
-El proyecto utiliza GitHub Actions para CI/CD. El pipeline incluye:
-
-- Build con Maven
-- Ejecución de pruebas
-- Análisis de calidad con SonarQube
-- Escaneo de seguridad
-- Construcción de imagen Docker
-
-## Contribución
-
-Por favor, lee [CONTRIBUTING.md](CONTRIBUTING.md) para detalles sobre nuestro código de conducta y el proceso para enviarnos pull requests.
+- [docs/DOCKER.md](docs/DOCKER.md) — detalle de los contenedores.
+- [docs/SWAGGER.md](docs/SWAGGER.md) — documentación de la API.
+- [CHANGELOG.md](CHANGELOG.md) — registro de cambios.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — cómo proponer cambios.
 
 ## Licencia
 
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
-
-## Contacto
-
-Universidad de Cartagena - Facultad de Ingeniería
-
-## Registro de Cambios
-
-Ver [CHANGELOG.md](CHANGELOG.md) para una lista de cambios.
+MIT — ver [LICENSE](LICENSE).
