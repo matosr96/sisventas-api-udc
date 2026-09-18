@@ -1,7 +1,9 @@
 # Build stage
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
+# Primero solo el pom: las dependencias quedan en una capa que no cambia con cada edicion de codigo.
 COPY pom.xml .
+RUN mvn -B -q dependency:go-offline
 COPY config ./config
 COPY src ./src
 RUN mvn -B clean package -DskipTests
@@ -25,4 +27,5 @@ HEALTHCHECK --interval=30s --timeout=3s \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# headless: OpenPDF usa java.awt y el contenedor no tiene pantalla.
+ENTRYPOINT ["java", "-Djava.awt.headless=true", "-jar", "app.jar"]

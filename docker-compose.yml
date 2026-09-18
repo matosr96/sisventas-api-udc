@@ -12,12 +12,19 @@ services:
       JWT_SECRET: ${JWT_SECRET-}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - sisventas-network
 
   db:
     image: mysql:8.0
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}", "--silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     ports:
       - "3306:3306"
     environment:
