@@ -36,10 +36,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = tokenOf(request);
         if (StringUtils.hasText(token) && jwtGenerator.isValid(token)) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(jwtGenerator.usernameOf(token));
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            // Un token vigente no basta: la cuenta tiene que seguir activa.
+            if (userDetails.isEnabled()) {
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
         filterChain.doFilter(request, response);
     }

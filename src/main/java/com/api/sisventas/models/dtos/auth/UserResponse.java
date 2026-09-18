@@ -3,6 +3,7 @@ package com.api.sisventas.models.dtos.auth;
 import com.api.sisventas.models.Role;
 import com.api.sisventas.models.RoleName;
 import com.api.sisventas.models.User;
+import com.api.sisventas.models.UserStatus;
 
 import java.time.Instant;
 import java.util.List;
@@ -15,6 +16,7 @@ public record UserResponse(
         String photo,
         String username,
         List<RoleName> roles,
+        UserStatus status,
         Instant createdAt) {
 
     public static UserResponse from(User user) {
@@ -25,6 +27,7 @@ public record UserResponse(
                 user.getPhoto(),
                 user.getUsername(),
                 user.getRoles().stream().map(Role::getName).toList(),
+                user.getStatus(),
                 user.getCreatedAt());
     }
 }

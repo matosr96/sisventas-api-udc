@@ -91,6 +91,11 @@ public class SecurityConfig {
                         .frameOptions(frame -> frame.deny()))
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(SecurityConstants.PUBLIC_URLS).permitAll()
+                        // El propio perfil y la propia contraseña: cualquier usuario autenticado.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/password").authenticated()
+                        // Ver a los demás usuarios: solo ADMIN (las escrituras ya lo son por la regla general).
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**").hasAuthority(SecurityConstants.ROLE_ADMIN)
                         // Lecturas: cualquier usuario autenticado.
                         .requestMatchers(HttpMethod.GET, "/api/v1/**").authenticated()
                         // Ventas: las registra y corrige quien vende.

@@ -3,6 +3,7 @@ package com.api.sisventas.security;
 import com.api.sisventas.dataSources.UserRepository;
 import com.api.sisventas.models.Role;
 import com.api.sisventas.models.User;
+import com.api.sisventas.models.UserStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,8 +27,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        boolean enabled = user.getStatus() == UserStatus.ACTIVE;
+        // disabled => DaoAuthenticationProvider rechaza el signin; el filtro JWT lo comprueba aparte.
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(), user.getPassword(), authoritiesOf(user.getRoles()));
+                user.getUsername(), user.getPassword(), enabled, true, true, true, authoritiesOf(user.getRoles()));
     }
 
     private Collection<GrantedAuthority> authoritiesOf(Set<Role> roles) {

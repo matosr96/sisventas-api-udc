@@ -24,6 +24,9 @@ public final class ErrorCodes {
     public static final String INVALID_CREDENTIALS = "611";
     public static final String DEFAULT_ROLE_MISSING = "612";
     public static final String FORBIDDEN = "613";
+    public static final String CANNOT_MODIFY_SELF = "614";
+    public static final String INVALID_CURRENT_PASSWORD = "615";
+    public static final String ROLE_NOT_FOUND = "616";
 
     public static final String CATEGORY_IN_USE = "620";
     public static final String INSUFFICIENT_STOCK = "621";
@@ -51,6 +54,9 @@ public final class ErrorCodes {
             Map.entry(INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED),
             Map.entry(DEFAULT_ROLE_MISSING, HttpStatus.INTERNAL_SERVER_ERROR),
             Map.entry(FORBIDDEN, HttpStatus.FORBIDDEN),
+            Map.entry(CANNOT_MODIFY_SELF, HttpStatus.CONFLICT),
+            Map.entry(INVALID_CURRENT_PASSWORD, HttpStatus.BAD_REQUEST),
+            Map.entry(ROLE_NOT_FOUND, HttpStatus.INTERNAL_SERVER_ERROR),
             Map.entry(CATEGORY_IN_USE, HttpStatus.CONFLICT),
             Map.entry(INSUFFICIENT_STOCK, HttpStatus.CONFLICT),
             Map.entry(SKU_ALREADY_EXISTS, HttpStatus.CONFLICT),
