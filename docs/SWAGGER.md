@@ -32,7 +32,7 @@ La documentación incluye:
 
 Para probar endpoints protegidos:
 
-1. Usa el endpoint `/api/auth/login` para obtener un token JWT
+1. Usa el endpoint `/api/v1/auth/signin` para obtener un token JWT
 2. Haz clic en el botón "Authorize" en la parte superior de Swagger UI
 3. Ingresa el token en el formato: `Bearer tu_token_jwt`
 4. Ahora puedes probar los endpoints protegidos

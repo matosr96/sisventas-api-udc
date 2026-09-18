@@ -1,45 +1,47 @@
-# SisVentas — API de gestión de ventas
+# SisVentas — Sales management API
 
 [![Java CI/CD](https://github.com/matosr96/sisventas-api-udc/actions/workflows/ci.yml/badge.svg)](https://github.com/matosr96/sisventas-api-udc/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java Version](https://img.shields.io/badge/Java-17-blue.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 
-API REST para un punto de venta pequeño: catálogo de productos, ventas con control de stock
-y trazabilidad de quién hizo qué.
+REST API for a small point of sale: product catalog, sales with stock control, and a trail of
+who did what.
 
-Es un **proyecto personal**. No está desplegado en ningún sitio y no atiende a nadie: su razón
-de ser es servir de referencia de un estándar de arquitectura concreto —un archivo por
-operación, capas con un solo motivo de cambio, errores como códigos de dominio, esquema
-gobernado por migraciones escritas a mano— aplicado de principio a fin en un dominio que
-duele si se modela mal, el de facturar.
+This is a **personal project**. It is not deployed anywhere and serves no users. Its purpose is
+to be a reference implementation of one specific architecture standard — one file per
+operation, layers with a single reason to change, errors as domain codes, schema governed by
+hand-written migrations — applied end to end in a domain that hurts when modeled badly:
+invoicing.
 
-## Qué hace
+> Code is in English; comments and Javadoc are in Spanish.
 
-- **Catálogo**: productos con SKU único, precio de compra y venta, y categorías.
-- **Ventas con líneas**: cada venta guarda qué se vendió, cuántas unidades y **a qué precio se
-  vendió entonces**. Subir un precio no altera las facturas ya emitidas.
-- **Stock real**: vender descuenta unidades en la misma transacción y rechaza la venta si no
-  hay existencias; anularla las devuelve.
-- **Correlativo de factura** por año (`F-2026-000001`).
-- **Usuarios y roles** (`USER`, `ADMIN`) con JWT y una única matriz de autorización.
-- **Auditoría automática** de toda escritura exitosa, sin que las rutas hagan nada.
-- **Contratos uniformes**: paginación `{ count, page, pages, items }` y errores
-  `{ "message": "<código>" }` en toda la API.
-- **OpenAPI/Swagger** en `/swagger-ui.html`.
+## What it does
 
-### Lo que todavía no hace
+- **Catalog**: products with a unique SKU, purchase and sale price, grouped into categories.
+- **Sales with line items**: every sale records what was sold, how many units, and **the price
+  at the time of the sale**. Raising a price does not alter invoices already issued.
+- **Real stock**: selling decrements units in the same transaction and rejects the sale when
+  there is not enough on hand; voiding a sale gives them back.
+- **Per-year invoice numbering** (`F-2026-000001`).
+- **Users and roles** (`USER`, `ADMIN`) with JWT and a single authorization matrix.
+- **Automatic auditing** of every successful write, with no work from the routes.
+- **Uniform contracts**: `{ count, page, pages, items }` for pagination and
+  `{ "message": "<code>" }` for every error.
+- **OpenAPI/Swagger** at `/swagger-ui.html`.
 
-Para que el alcance quede claro:
+### What it does not do yet
 
-- No modela **reposiciones ni compras a proveedor**: el stock solo baja al vender y sube al
-  anular. Por eso `initialStock` es un dato del alta y no se actualiza.
-- No **imprime** facturas: hay número, líneas y totales, pero no PDF ni plantilla.
-- No tiene **gestión de usuarios por API** más allá del alta: los roles se asignan en la base.
-- No hay **despliegue**: el CI construye la imagen Docker pero nadie la publica.
+Stated plainly, so the scope is not overread:
 
-## Arranque rápido
+- No **restocking or supplier purchases**. Stock only goes down on a sale and back up on a
+  void, which is why `initialStock` is a value from creation time and never updates.
+- No **invoice rendering**: there is a number, line items and totals, but no PDF or template.
+- No **user management over the API** beyond signup; roles are assigned in the database.
+- No **deployment**: CI builds the Docker image, but nothing publishes it.
 
-Con Docker, que trae MySQL:
+## Quick start
+
+With Docker, which brings MySQL along:
 
 ```bash
 docker compose up -d db
@@ -47,160 +49,167 @@ docker compose up -d db
 ./mvnw spring-boot:run
 ```
 
-Sin Docker, con un MySQL 8 propio:
+Without Docker, against your own MySQL 8:
 
 ```bash
 export DB_URL="jdbc:mysql://localhost:3306/bdsisventas"
 export DB_USERNAME=root DB_PASSWORD=...
-export JWT_SECRET="una_cadena_de_al_menos_32_caracteres"
+export JWT_SECRET="a_string_of_at_least_32_characters"
 ./scripts/db-migrate.sh apply
 ./mvnw spring-boot:run
 ```
 
-Comprobar que responde y sacar un token:
+Check that it is alive and get a token:
 
 ```bash
 curl -s localhost:8080/actuator/health
 
 TOKEN=$(curl -s -X POST localhost:8080/api/v1/auth/signup \
   -H 'Content-Type: application/json' \
-  -d '{"firstName":"Edgar","lastName":"Matos","username":"matos","password":"12345678"}' \
+  -d '{"firstName":"Edgar","lastName":"Matos","username":"matos","password":"a-strong-password"}' \
   | python3 -c 'import sys,json; print(json.load(sys.stdin)["accessToken"])')
 
 curl -s localhost:8080/api/v1/products -H "Authorization: Bearer $TOKEN"
 ```
 
-El usuario nace con rol `USER`: puede leer y registrar ventas. Para tocar el catálogo hace
-falta `ADMIN`, que se asigna en la tabla `users_roles`.
+A new user gets the `USER` role: it can read and register sales. Touching the catalog requires
+`ADMIN`, which is granted in the `users_roles` table.
 
-La configuración va por entorno, nunca en el repositorio: `DB_URL`, `DB_USERNAME`,
-`DB_PASSWORD`, `JWT_SECRET` (mínimo 32 caracteres), `CORS_ORIGINS`, `PORT`.
+Configuration comes from the environment, never from the repository: `DB_URL`, `DB_USERNAME`,
+`DB_PASSWORD`, `JWT_SECRET` (32 characters minimum), `CORS_ORIGINS`, `PORT`.
 
 ## Stack
 
-Java 17 · Spring Boot 3.2 · Spring Security con JWT (jjwt 0.11.5) · Spring Data JPA · MySQL 8 ·
+Java 17 · Spring Boot 3.2 · Spring Security with JWT (jjwt 0.11.5) · Spring Data JPA · MySQL 8 ·
 springdoc-openapi · Lombok.
 
-Herramientas: Maven (wrapper incluido), Docker Compose, GitHub Actions, Checkstyle, JaCoCo.
+Tooling: Maven (wrapper included), Docker Compose, GitHub Actions, Checkstyle, JaCoCo.
 
-Requisitos: Java 17+ y MySQL 8, o solo Docker.
+Requirements: Java 17+ and MySQL 8, or just Docker.
 
-## Estructura del proyecto
+## Project structure
 
-Arquitectura por capas con **un archivo por operación**, siguiendo el estándar de Orienta
-(`.claude/rules/convenciones.md`). El código va en inglés; los comentarios y la documentación, en español.
+Layered architecture with **one file per operation**. Package names mirror the reference
+standard rather than Spring's usual vocabulary, so moving between projects has no friction.
 
 ```
 src/main/java/com/api/sisventas/
-├── server/                 # Transversal: GlobalErrorHandler, AuditFilter, OpenApiConfig
-├── security/               # JWT, CORS y la matriz de autorización (SecurityConfig)
-├── routes/<entity>/        # Capa HTTP: CreateProductRoute, ListProductsRoute, ...
-├── businessLogic/<entity>/ # Dominio: CreateProduct, ListProducts, ... (método execute)
-├── models/                 # Entidades JPA
-│   └── dtos/<entity>/      # Contrato de la API: *Request y *Response (records)
-├── dataSources/            # Repositorios Spring Data + SqlErrors
+├── server/                 # Cross-cutting: GlobalErrorHandler, AuditFilter, OpenApiConfig
+├── security/               # JWT, CORS and the authorization matrix (SecurityConfig)
+├── routes/<entity>/        # HTTP layer: CreateProductRoute, ListProductsRoute, ...
+├── businessLogic/<entity>/ # Domain: CreateProduct, ListProducts, ... (execute method)
+├── models/                 # JPA entities
+│   └── dtos/<entity>/      # API contract: *Request and *Response (records)
+├── dataSources/            # Spring Data repositories + SqlErrors
 └── common/                 # DomainError, ErrorCodes, PaginatedResponse, Pagination, Authenticated
 
-migraciones/                # SQL numerado escrito a mano (ddl-auto=validate)
-scripts/db-migrate.sh       # Aplica y audita las migraciones
+migraciones/                # Hand-written, numbered SQL (ddl-auto=validate)
+scripts/db-migrate.sh       # Applies and tracks migrations
 ```
 
-Reglas que sostienen la estructura:
+The rules that hold the structure together:
 
-- La entidad JPA **nunca** cruza la frontera HTTP: entra un `*Request`, sale un `*Response`.
-- Las rutas no tienen `try/catch`: `GlobalErrorHandler` traduce todo error al mismo contrato.
-- La autorización vive solo en `SecurityConfig`; toda ruta nueva nace protegida.
-- El esquema lo gobiernan las migraciones, nunca Hibernate.
+- A JPA entity **never** crosses the HTTP boundary: a `*Request` comes in, a `*Response` goes out.
+- Routes have no `try/catch`: `GlobalErrorHandler` turns every error into the same contract.
+- Authorization lives only in `SecurityConfig`; every new route is protected by default.
+- The schema is governed by migrations, never by Hibernate.
 
-## Base de datos y migraciones
+## Database and migrations
 
-El esquema se escribe a mano en `migraciones/` y `spring.jpa.hibernate.ddl-auto=validate`: si una
-entidad y su tabla no coinciden, la aplicación no arranca.
+The schema is written by hand in `migraciones/` and `spring.jpa.hibernate.ddl-auto=validate`:
+if an entity and its table disagree, the application refuses to start.
 
 ```bash
-./scripts/db-migrate.sh status    # qué está aplicado y qué falta
-./scripts/db-migrate.sh apply     # aplica lo pendiente, en orden
+./scripts/db-migrate.sh status    # what is applied and what is pending
+./scripts/db-migrate.sh apply     # applies what is pending, in order
 ```
 
-Una base que ya tenía el esquema anterior debe marcar la primera migración antes del primer `apply`:
+Requires the `mysql` client and takes its connection from `DB_NAME`, `DB_USER`, `DB_PASSWORD`,
+`DB_HOST` and `DB_PORT`. Each file is recorded in `schema_migrations` inside the same
+transaction as the SQL it runs, so a failed migration is never marked as applied.
+
+A database created before the model was reworked is recreated, not migrated:
 
 ```bash
-./scripts/db-migrate.sh baseline 0001_esquema_inicial.sql
+docker compose exec -T db mysql -uroot -proot \
+  -e "DROP DATABASE IF EXISTS bdsisventas; CREATE DATABASE bdsisventas;"
+./scripts/db-migrate.sh apply
 ```
 
-## Documentación de la API
+## API
 
-La API REST está disponible en `http://localhost:8080/api/v1`:
+Base URL `http://localhost:8080/api/v1`. JWT in `Authorization: Bearer <token>`, JSON fields in
+`camelCase`, interactive docs at `/swagger-ui.html` and the OpenAPI spec at `/api-docs`.
 
-- Autenticación mediante JWT (`Authorization: Bearer <token>`)
-- Respuestas en formato JSON con campos en `camelCase`
-- Documentación OpenAPI/Swagger en `/swagger-ui.html`
+### Common contracts
 
-### Contratos comunes
-
-Listados paginados — `?page=` (base 1) y `?limit=` (por defecto 10):
+Paginated lists — `?page=` (1-based) and `?limit=` (10 by default):
 
 ```json
-{ "count": 42, "page": 1, "pages": 5, "items": [ ... ] }
+{ "count": 42, "page": 1, "pages": 5, "items": [] }
 ```
 
-Errores — el mismo cuerpo siempre, con el código de dominio como mensaje:
+Errors — always the same body, with the domain code as the message:
 
 ```json
 { "message": "601" }
 ```
 
-### Códigos de error
+### Error codes
 
-| Código | Significado | HTTP |
+| Code | Meaning | HTTP |
 | --- | --- | --- |
-| 601 | Producto no encontrado | 404 |
-| 602 | Categoría no encontrada | 404 |
-| 603 | Venta no encontrada | 404 |
-| 604 | Usuario no encontrado | 404 |
-| 610 | El nombre de usuario ya existe | 409 |
-| 611 | Credenciales inválidas | 401 |
-| 612 | Falta el rol por defecto (`USER`) en la base | 500 |
-| 613 | Sin permisos para este recurso | 403 |
-| 620 | La categoría tiene productos y no se puede eliminar | 409 |
-| 621 | Stock insuficiente para la venta | 409 |
-| 622 | El SKU ya existe | 409 |
-| 623 | El nombre de categoría ya existe | 409 |
-| 630 | Parámetros de paginación inválidos | 400 |
-| 631 | Petición inválida (falla la validación del DTO) | 400 |
-| 690 | Violación de integridad referencial | 409 |
-| 699 | Error interno no controlado | 500 |
+| 601 | Product not found | 404 |
+| 602 | Category not found | 404 |
+| 603 | Sale not found | 404 |
+| 604 | User not found | 404 |
+| 610 | Username already taken | 409 |
+| 611 | Invalid credentials | 401 |
+| 612 | Default role (`USER`) missing from the database | 500 |
+| 613 | Not allowed on this resource | 403 |
+| 620 | Category still has products and cannot be deleted | 409 |
+| 621 | Not enough stock for the sale | 409 |
+| 622 | SKU already exists | 409 |
+| 623 | Category name already exists | 409 |
+| 630 | Invalid pagination parameters | 400 |
+| 631 | Invalid request (DTO validation failed) | 400 |
+| 690 | Referential integrity violation | 409 |
+| 699 | Unhandled internal error | 500 |
 
-Añadir un código implica tocar `common/ErrorCodes` y esta tabla en el mismo commit.
+Adding a code means touching `common/ErrorCodes` and this table in the same commit.
 
 ### Endpoints
 
-#### Autenticación (públicos)
-- `POST /api/v1/auth/signup`: Registra un usuario con rol `USER` y devuelve su token
-- `POST /api/v1/auth/signin`: Autentica y devuelve el token de acceso
+**Authentication** (public)
 
-#### Productos
-- `GET /api/v1/products`: Listar productos (paginado) — autenticado
-- `GET /api/v1/products/{id}`: Obtener producto — autenticado
-- `POST /api/v1/products`: Crear producto — `ADMIN`
-- `PUT /api/v1/products/{id}`: Actualizar producto (parcial) — `ADMIN`
-- `DELETE /api/v1/products/{id}`: Eliminar producto — `ADMIN`
+- `POST /api/v1/auth/signup` — registers a user with the `USER` role and returns their token
+- `POST /api/v1/auth/signin` — authenticates and returns the access token
 
-#### Categorías
-- `GET /api/v1/categories`: Listar categorías (paginado) — autenticado
-- `GET /api/v1/categories/{id}`: Obtener categoría — autenticado
-- `POST /api/v1/categories`: Crear categoría — `ADMIN`
-- `PUT /api/v1/categories/{id}`: Actualizar categoría (parcial) — `ADMIN`
-- `DELETE /api/v1/categories/{id}`: Eliminar categoría — `ADMIN`
+**Products**
 
-#### Ventas
-- `GET /api/v1/sales`: Listar ventas (paginado) — autenticado
-- `GET /api/v1/sales/{id}`: Obtener venta con sus líneas — autenticado
-- `POST /api/v1/sales`: Registrar venta — `USER` o `ADMIN`
-- `PUT /api/v1/sales/{id}`: Corregir **solo la fecha** — `USER` o `ADMIN`
-- `DELETE /api/v1/sales/{id}`: Anular la venta y devolver el stock — `ADMIN`
+- `GET /api/v1/products` — list, paginated — authenticated
+- `GET /api/v1/products/{id}` — read one — authenticated
+- `POST /api/v1/products` — create — `ADMIN`
+- `PUT /api/v1/products/{id}` — partial update — `ADMIN`
+- `DELETE /api/v1/products/{id}` — delete or deactivate — `ADMIN`
 
-Una venta se registra con sus líneas; el precio y el total los pone el servidor:
+**Categories**
+
+- `GET /api/v1/categories` — list, paginated — authenticated
+- `GET /api/v1/categories/{id}` — read one — authenticated
+- `POST /api/v1/categories` — create — `ADMIN`
+- `PUT /api/v1/categories/{id}` — partial update — `ADMIN`
+- `DELETE /api/v1/categories/{id}` — delete — `ADMIN`
+
+**Sales**
+
+- `GET /api/v1/sales` — list, paginated — authenticated
+- `GET /api/v1/sales/{id}` — read one, with its line items — authenticated
+- `POST /api/v1/sales` — register — `USER` or `ADMIN`
+- `PUT /api/v1/sales/{id}` — correct **the date only** — `USER` or `ADMIN`
+- `DELETE /api/v1/sales/{id}` — void the sale and return the stock — `ADMIN`
+
+A sale is registered with its line items; price and total are set by the server:
 
 ```json
 POST /api/v1/sales
@@ -220,59 +229,60 @@ POST /api/v1/sales
 }
 ```
 
-## Reglas del dominio
+## Domain rules
 
-Decisiones del modelo que no son evidentes leyendo solo los endpoints:
+Model decisions that are not obvious from the endpoints alone:
 
-- **Una venta es inmutable salvo su fecha.** `unitPrice` se congela al registrar, así que
-  subir el precio de un producto no altera las facturas ya emitidas. Para rectificar una
-  venta se anula (lo que devuelve el stock) y se registra de nuevo.
-- **El total lo calcula el servidor** sumando los subtotales. El cliente no lo envía.
-- **Vender descuenta stock** dentro de la misma transacción: una línea sin stock deshace la
-  venta entera con el código 621.
-- **El dinero es `DECIMAL(12,2)`**, nunca coma flotante.
-- **Un producto vendido no se borra, se desactiva** (`status: INACTIVE`): borrarlo destruiría
-  las líneas de venta que lo referencian. El borrado real queda para lo que nunca se usó.
-- **Una categoría con productos no se borra** (código 620).
-- **`createdBy` es trazabilidad, no propiedad**: nadie filtra por él. Todo usuario autenticado
-  ve el catálogo completo.
-- **`saleDate` es la fecha del negocio** y puede ser retroactiva; `createdAt` es cuándo se
-  registró en el sistema.
-- **`initialStock` es el stock del alta** y no se actualiza: el sistema todavía no modela
-  reposiciones ni compras a proveedor.
+- **A sale is immutable except for its date.** `unitPrice` is frozen when the sale is
+  registered, so raising a product's price leaves issued invoices untouched. Correcting a sale
+  means voiding it (which returns the stock) and registering it again.
+- **The server computes the total** by summing the line subtotals. The client never sends it.
+- **Selling decrements stock** inside the same transaction: one line without stock rolls back
+  the whole sale with code 621.
+- **Money is `DECIMAL(12,2)`**, never floating point.
+- **A product that has been sold is deactivated, not deleted** (`status: INACTIVE`): deleting it
+  would destroy the line items that reference it. Hard deletes are reserved for what was never
+  used.
+- **A category with products cannot be deleted** (code 620).
+- **`createdBy` is traceability, not ownership**: nothing filters by it. Every authenticated
+  user sees the whole catalog.
+- **`saleDate` is the business date** and may be backdated; `createdAt` is when the sale was
+  recorded in the system.
+- **`initialStock` is the stock at creation time** and never updates: restocking and supplier
+  purchases are not modeled yet.
 
-Toda escritura exitosa queda registrada en la tabla `audits` con usuario, método y recurso.
+Every successful write is recorded in the `audits` table with user, method and resource.
 
-## Pruebas
+## Tests
 
 ```bash
-./mvnw test      # levanta el contexto contra H2 en memoria: no necesita MySQL ni Docker
-./mvnw package   # compila, pasa Checkstyle y ejecuta las pruebas
-./mvnw test jacoco:report   # cobertura en target/site/jacoco
+./mvnw test                 # boots the context against in-memory H2: no MySQL or Docker needed
+./mvnw package              # compiles, runs Checkstyle and the test suite
+./mvnw test jacoco:report   # coverage report in target/site/jacoco
 ```
 
-La cobertura es mínima: hay una prueba de contexto y poco más. Las migraciones **no** se
-ejecutan en las pruebas, así que un error en el SQL solo aparece al arrancar contra MySQL de
-verdad, donde `ddl-auto=validate` compara el esquema con las entidades.
+Coverage is minimal: a context test and little else. Migrations do **not** run during tests, so
+a mistake in the SQL only shows up when starting against a real MySQL, where `ddl-auto=validate`
+compares the schema against the entities.
 
-## Calidad y CI
+## Quality and CI
 
-Checkstyle corre en la fase `validate` de cada build y el proyecto está en cero avisos.
-JaCoCo genera el informe de cobertura tras los tests. El plugin de SonarQube está declarado
-en el `pom.xml` para quien quiera apuntarlo a un servidor propio (`./mvnw sonar:sonar`), pero
-el CI no lo ejecuta.
+Checkstyle runs in the `validate` phase of every build and the project sits at zero warnings.
+JaCoCo produces the coverage report after the tests. The SonarQube plugin is declared in the
+`pom.xml` for anyone who wants to point it at their own server (`./mvnw sonar:sonar`), but CI
+does not run it.
 
-El workflow de GitHub Actions compila con Maven, corre las pruebas, sube los resultados,
-construye la imagen Docker y pasa un escaneo de seguridad con Snyk (requiere el secret
-`SNYK_TOKEN`; sin él, ese paso falla).
+The GitHub Actions workflow builds with Maven, runs the tests, uploads the results, builds the
+Docker image and runs a Snyk security scan (needs the `SNYK_TOKEN` secret; without it, that step
+fails).
 
-## Documentación relacionada
+## Related documentation
 
-- [docs/DOCKER.md](docs/DOCKER.md) — detalle de los contenedores.
-- [docs/SWAGGER.md](docs/SWAGGER.md) — documentación de la API.
-- [CHANGELOG.md](CHANGELOG.md) — registro de cambios.
-- [CONTRIBUTING.md](CONTRIBUTING.md) — cómo proponer cambios.
+- [docs/DOCKER.md](docs/DOCKER.md) — container details.
+- [docs/SWAGGER.md](docs/SWAGGER.md) — API documentation.
+- [CHANGELOG.md](CHANGELOG.md) — change log.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — how to propose changes.
 
-## Licencia
+## License
 
-MIT — ver [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
