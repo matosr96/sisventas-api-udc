@@ -7,6 +7,29 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [No Publicado]
 
+### Corregido (auditoría completa)
+- **Carrera en el stock**: ventas simultáneas sobre el mismo producto leían el mismo saldo y
+  cada una escribía el suyo (20 ventas sobre 10 unidades vendían 11 y dejaban 8). El libro
+  carga ahora el producto con bloqueo de fila; test de concurrencia que lo garantiza.
+- El primer documento del año en concurrencia fallaba por clave duplicada en el contador.
+  Los contadores se siembran ahora de antemano (migración 0005, al arrancar y a diario), de
+  modo que emitir un número es solo una lectura con bloqueo: crearlos en la transacción del
+  documento provocaba deadlocks en MySQL.
+- Borrar un producto fallaba con 690 en cuanto tenía su asiento `INITIAL`: ahora se
+  desactiva si tiene asientos y solo se borra si nunca se movió.
+- Se podía vender y comprar un producto `INACTIVE` (nuevo código 607).
+- El registro no tenía límite de intentos; el limitador cubre `/signup` y libera memoria.
+- `purchasePrice` pasa a ser el último costo pagado: cada compra lo actualiza.
+- `sales.user_id`, `purchases.user_id` y `stock_movements.user_id` son `NOT NULL`
+  (migración 0004). Fechas de venta y compra no pueden ser futuras.
+- Swagger en inglés, como el README. `UserResponse` vive en `dtos/user`.
+- Dependencias: fuera `modelmapper`, `slf4j-api` y `logback-classic` (sin uso o
+  redundantes) y el plugin Sonar; springdoc 2.6.0, compatible con Boot 3.3.
+- `docker compose up` espera a que MySQL esté sano y reinicia la API si cae; el
+  Dockerfile cachea las dependencias en su propia capa y arranca headless.
+- Seis tests HTTP nuevos: matriz de autorización, contrato 401/403, cuenta desactivada con
+  token vigente, auditoría, PDF y límites de intentos.
+
 ### Añadido
 - Inventario: proveedores, compras con líneas y costo congelado (`P-2026-000001`), libro
   mayor `stock_movements` por el que pasa toda variación de stock, y ajustes manuales con

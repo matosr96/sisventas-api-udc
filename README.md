@@ -187,6 +187,7 @@ Errors — always the same body, with the domain code as the message:
 | 604 | User not found | 404 |
 | 605 | Supplier not found | 404 |
 | 606 | Purchase not found | 404 |
+| 607 | Product is inactive and cannot be sold or purchased | 409 |
 | 610 | Username already taken | 409 |
 | 611 | Invalid credentials | 401 |
 | 612 | Default role (`USER`) missing from the database | 500 |
@@ -202,7 +203,7 @@ Errors — always the same body, with the domain code as the message:
 | 625 | Supplier is inactive | 409 |
 | 630 | Invalid pagination parameters | 400 |
 | 631 | Invalid request (DTO validation failed) | 400 |
-| 640 | Too many sign-in attempts | 429 |
+| 640 | Too many sign-in or sign-up attempts from this address | 429 |
 | 690 | Referential integrity violation | 409 |
 | 699 | Unhandled internal error | 500 |
 
@@ -303,16 +304,19 @@ Model decisions that are not obvious from the endpoints alone:
 - **Selling decrements stock** inside the same transaction: one line without stock rolls back
   the whole sale with code 621.
 - **Money is `DECIMAL(12,2)`**, never floating point.
-- **A product that has been sold is deactivated, not deleted** (`status: INACTIVE`): deleting it
-  would destroy the line items that reference it. Hard deletes are reserved for what was never
-  used.
+- **A product with ledger entries is deactivated, not deleted** (`status: INACTIVE`): deleting it
+  would destroy the entries and line items that reference it. Hard deletes are reserved for
+  products that never moved. An inactive product cannot be sold or purchased (607).
+- **`purchasePrice` is the last cost paid**: every registered purchase updates it. It is null
+  until the first purchase.
 - **A category with products cannot be deleted** (code 620).
 - **`createdBy` is traceability, not ownership**: nothing filters by it. Every authenticated
   user sees the whole catalog.
 - **`saleDate` is the business date** and may be backdated; `createdAt` is when the sale was
   recorded in the system.
 - **Stock is a ledger, not a field.** Every change to `currentStock` goes through one
-  service and leaves exactly one `stock_movements` entry (`INITIAL`, `PURCHASE`,
+  service that locks the product row first (`SELECT ... FOR UPDATE`), so concurrent sales
+  never oversell nor leave contradictory balances, and leaves exactly one `stock_movements` entry (`INITIAL`, `PURCHASE`,
   `PURCHASE_VOID`, `SALE`, `SALE_VOID`, `ADJUSTMENT`) with the balance after it. The balance
   never goes negative: a sale, an adjustment or a purchase void that would take it below zero
   is refused with 621. `initialStock` is simply the `INITIAL` entry.
@@ -322,6 +326,7 @@ Model decisions that are not obvious from the endpoints alone:
   receive new purchases (625).
 - **Accounts are deactivated, never deleted**: they sign sales, purchases and ledger entries.
   An `INACTIVE` account cannot sign in and cannot keep using a token that has not expired.
+- **Sale and purchase dates may be backdated but never in the future.**
 - **Nobody locks themselves out** (614): an admin cannot drop their own `ADMIN` role nor
   deactivate their own account. Changing your own password requires the current one.
 
@@ -335,7 +340,10 @@ Every successful write is recorded in the `audits` table with user, method and r
 ./mvnw test jacoco:report   # coverage report in target/site/jacoco
 ```
 
-Coverage is minimal: a context test and little else. Migrations do **not** run during tests, so
+Thirteen tests: the stock ledger invariants, a concurrency test (twenty simultaneous sales
+over ten units must accept exactly ten), the user-management guards, and HTTP-level tests of
+the authorization matrix, the 401/403 contract, token rejection for deactivated accounts,
+auditing, the invoice PDF and the rate limits. Migrations do **not** run during tests, so
 a mistake in the SQL only shows up when starting against a real MySQL, where `ddl-auto=validate`
 compares the schema against the entities.
 
