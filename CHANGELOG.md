@@ -8,6 +8,17 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ## [No Publicado]
 
 ### Añadido
+- Inventario: proveedores, compras con líneas y costo congelado (`P-2026-000001`), libro
+  mayor `stock_movements` por el que pasa toda variación de stock, y ajustes manuales con
+  motivo. El stock deja de editarse a mano en `PUT /products`.
+- Gestión de usuarios por la API: listado, detalle, roles, activar/desactivar, `me` y cambio
+  de contraseña propia. Una cuenta `INACTIVE` no entra ni con un token vigente, y nadie
+  puede bloquearse a sí mismo (614).
+- Factura en PDF: `GET /sales/{id}/pdf` (OpenPDF, única dependencia añadida fuera de Spring).
+- Publicación de la imagen en GHCR (`ghcr.io/matosr96/sisventas-api`) en cada build verde de
+  `main` y en cada tag `v*`.
+- Tests de integración `StockLedgerTest` y `UserManagementTest`.
+- Códigos 605, 606, 614, 615, 616, 624 y 625.
 - Ventas con líneas (`sale_items`): cantidad y precio unitario congelado en el momento de la
   venta, con subtotal por línea.
 - Control de stock real: vender descuenta unidades y rechaza la venta sin existencias

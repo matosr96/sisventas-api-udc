@@ -55,6 +55,21 @@ docker compose ps
 curl -s localhost:8080/actuator/health
 ```
 
+## Imagen publicada
+
+Cada build verde de `main` publica `ghcr.io/matosr96/sisventas-api:latest` (y `sha-<commit>`);
+un tag `vX.Y.Z` publica además `X.Y.Z`. Para usarla sin construir nada:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e DB_URL="jdbc:mysql://host.docker.internal:3306/bdsisventas" \
+  -e DB_USERNAME=root -e DB_PASSWORD=... \
+  -e JWT_SECRET="una_cadena_de_al_menos_48_bytes" \
+  ghcr.io/matosr96/sisventas-api:latest
+```
+
+La imagen no migra la base: aplica `migraciones/` antes, igual que en local.
+
 ## Acceso a los Servicios
 
 - **API**: http://localhost:8080

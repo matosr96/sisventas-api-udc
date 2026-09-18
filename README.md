@@ -20,24 +20,28 @@ invoicing.
 - **Catalog**: products with a unique SKU, purchase and sale price, grouped into categories.
 - **Sales with line items**: every sale records what was sold, how many units, and **the price
   at the time of the sale**. Raising a price does not alter invoices already issued.
-- **Real stock**: selling decrements units in the same transaction and rejects the sale when
-  there is not enough on hand; voiding a sale gives them back.
-- **Per-year invoice numbering** (`F-2026-000001`).
-- **Users and roles** (`USER`, `ADMIN`) with JWT and a single authorization matrix.
+- **Purchases from suppliers**: the mirror of sales — line items with a frozen unit cost,
+  server-computed total, per-year numbering (`P-2026-000001`).
+- **A stock ledger**: every change to a product's stock — initial load, purchase, sale, void,
+  manual adjustment — leaves exactly one entry with the resulting balance. Stock is never
+  edited by hand; it is the sum of its entries.
+- **Per-year invoice numbering** (`F-2026-000001`) and **invoice PDF** (`GET /sales/{id}/pdf`).
+- **Users and roles** (`USER`, `ADMIN`) with JWT and a single authorization matrix, plus
+  admin endpoints to list users, assign roles and deactivate accounts.
 - **Automatic auditing** of every successful write, with no work from the routes.
 - **Uniform contracts**: `{ count, page, pages, items }` for pagination and
   `{ "message": "<code>" }` for every error.
 - **OpenAPI/Swagger** at `/swagger-ui.html`.
 
-### What it does not do yet
+### Still out of scope
 
 Stated plainly, so the scope is not overread:
 
-- No **restocking or supplier purchases**. Stock only goes down on a sale and back up on a
-  void, which is why `initialStock` is a value from creation time and never updates.
-- No **invoice rendering**: there is a number, line items and totals, but no PDF or template.
-- No **user management over the API** beyond signup; roles are assigned in the database.
-- No **deployment**: CI builds the Docker image, but nothing publishes it.
+- **Hosting.** Every green build on `main` publishes the image to GHCR, but nothing runs it:
+  there is no server, no environment, no URL.
+- **Invoice branding** beyond the business name: no logo, tax breakdown or template.
+- **Password recovery.** Users change their own password with the current one; there is no
+  reset by email.
 
 ## Quick start
 
@@ -80,10 +84,26 @@ Configuration comes from the environment, never from the repository: `DB_URL`, `
 The app refuses to start without a valid `JWT_SECRET`: there is no fallback, because a signing
 key in a public repository would let anyone forge tokens.
 
+## Running the published image
+
+Every green build on `main` publishes `ghcr.io/matosr96/sisventas-api` tagged `latest` and
+`sha-<commit>`; a `vX.Y.Z` tag also publishes `X.Y.Z`.
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e DB_URL="jdbc:mysql://host.docker.internal:3306/bdsisventas" \
+  -e DB_USERNAME=root -e DB_PASSWORD=... \
+  -e JWT_SECRET="a_string_of_at_least_48_bytes_long_no_default_exists" \
+  ghcr.io/matosr96/sisventas-api:latest
+```
+
+The image does not migrate the database: apply `migraciones/` first, exactly as in local
+development.
+
 ## Stack
 
 Java 17 · Spring Boot 3.3 · Spring Security with JWT (jjwt 0.11.5) · Spring Data JPA · MySQL 8 ·
-springdoc-openapi · Lombok.
+springdoc-openapi · OpenPDF · Lombok.
 
 Tooling: Maven (wrapper included), Docker Compose, GitHub Actions, Checkstyle, JaCoCo.
 
@@ -165,14 +185,21 @@ Errors — always the same body, with the domain code as the message:
 | 602 | Category not found | 404 |
 | 603 | Sale not found | 404 |
 | 604 | User not found | 404 |
+| 605 | Supplier not found | 404 |
+| 606 | Purchase not found | 404 |
 | 610 | Username already taken | 409 |
 | 611 | Invalid credentials | 401 |
 | 612 | Default role (`USER`) missing from the database | 500 |
 | 613 | Not allowed on this resource | 403 |
+| 614 | You cannot change your own role or status | 409 |
+| 615 | Current password is wrong | 400 |
+| 616 | Role missing from the database | 500 |
 | 620 | Category still has products and cannot be deleted | 409 |
-| 621 | Not enough stock for the sale | 409 |
+| 621 | Not enough stock (sale, adjustment or purchase void) | 409 |
 | 622 | SKU already exists | 409 |
 | 623 | Category name already exists | 409 |
+| 624 | Supplier name already exists | 409 |
+| 625 | Supplier is inactive | 409 |
 | 630 | Invalid pagination parameters | 400 |
 | 631 | Invalid request (DTO validation failed) | 400 |
 | 640 | Too many sign-in attempts | 429 |
@@ -192,9 +219,11 @@ Adding a code means touching `common/ErrorCodes` and this table in the same comm
 
 - `GET /api/v1/products` — list, paginated — authenticated
 - `GET /api/v1/products/{id}` — read one — authenticated
-- `POST /api/v1/products` — create — `ADMIN`
-- `PUT /api/v1/products/{id}` — partial update — `ADMIN`
+- `POST /api/v1/products` — create, with `initialStock` — `ADMIN`
+- `PUT /api/v1/products/{id}` — partial update; stock is **not** editable here — `ADMIN`
 - `DELETE /api/v1/products/{id}` — delete or deactivate — `ADMIN`
+- `GET /api/v1/products/{id}/movements` — stock ledger, paginated — authenticated
+- `POST /api/v1/products/{id}/adjustments` — manual correction with a mandatory reason — `ADMIN`
 
 **Categories**
 
@@ -211,6 +240,37 @@ Adding a code means touching `common/ErrorCodes` and this table in the same comm
 - `POST /api/v1/sales` — register — `USER` or `ADMIN`
 - `PUT /api/v1/sales/{id}` — correct **the date only** — `USER` or `ADMIN`
 - `DELETE /api/v1/sales/{id}` — void the sale and return the stock — `ADMIN`
+- `GET /api/v1/sales/{id}/pdf` — the invoice as `application/pdf` — authenticated
+
+**Suppliers**
+
+- `GET /api/v1/suppliers` — list, paginated — authenticated
+- `GET /api/v1/suppliers/{id}` — read one — authenticated
+- `POST /api/v1/suppliers` — create — `ADMIN`
+- `PUT /api/v1/suppliers/{id}` — partial update, including `status` — `ADMIN`
+- `DELETE /api/v1/suppliers/{id}` — delete, or deactivate if it has purchases — `ADMIN`
+
+**Purchases**
+
+- `GET /api/v1/purchases` — list, paginated — authenticated
+- `GET /api/v1/purchases/{id}` — read one, with its line items — authenticated
+- `POST /api/v1/purchases` — register; adds stock and freezes the unit cost — `ADMIN`
+- `PUT /api/v1/purchases/{id}` — correct **the date only** — `ADMIN`
+- `DELETE /api/v1/purchases/{id}` — void; refused if the goods were already sold — `ADMIN`
+
+```json
+POST /api/v1/purchases
+{ "supplierId": 1, "items": [ { "productId": 1, "quantity": 20, "unitCost": 1100.50 } ] }
+```
+
+**Users**
+
+- `GET /api/v1/users/me` — own profile — authenticated
+- `PUT /api/v1/users/me/password` — change own password; requires the current one — authenticated
+- `GET /api/v1/users` — list, paginated — `ADMIN`
+- `GET /api/v1/users/{id}` — read one — `ADMIN`
+- `PUT /api/v1/users/{id}/roles` — replace the role set — `ADMIN`
+- `PUT /api/v1/users/{id}/status` — `ACTIVE` / `INACTIVE` — `ADMIN`
 
 A sale is registered with its line items; price and total are set by the server:
 
@@ -251,8 +311,19 @@ Model decisions that are not obvious from the endpoints alone:
   user sees the whole catalog.
 - **`saleDate` is the business date** and may be backdated; `createdAt` is when the sale was
   recorded in the system.
-- **`initialStock` is the stock at creation time** and never updates: restocking and supplier
-  purchases are not modeled yet.
+- **Stock is a ledger, not a field.** Every change to `currentStock` goes through one
+  service and leaves exactly one `stock_movements` entry (`INITIAL`, `PURCHASE`,
+  `PURCHASE_VOID`, `SALE`, `SALE_VOID`, `ADJUSTMENT`) with the balance after it. The balance
+  never goes negative: a sale, an adjustment or a purchase void that would take it below zero
+  is refused with 621. `initialStock` is simply the `INITIAL` entry.
+- **A purchase is immutable except for its date**, like a sale. Voiding it pulls its units
+  back out, which is why it is refused once they have been sold.
+- **A supplier with purchases is deactivated, not deleted**, and an inactive supplier cannot
+  receive new purchases (625).
+- **Accounts are deactivated, never deleted**: they sign sales, purchases and ledger entries.
+  An `INACTIVE` account cannot sign in and cannot keep using a token that has not expired.
+- **Nobody locks themselves out** (614): an admin cannot drop their own `ADMIN` role nor
+  deactivate their own account. Changing your own password requires the current one.
 
 Every successful write is recorded in the `audits` table with user, method and resource.
 
