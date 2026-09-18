@@ -39,9 +39,12 @@ Stated plainly, so the scope is not overread:
 
 - **Hosting.** Every green build on `main` publishes the image to GHCR, but nothing runs it:
   there is no server, no environment, no URL.
-- **Invoice branding** beyond the business name: no logo, tax breakdown or template.
-- **Password recovery.** Users change their own password with the current one; there is no
-  reset by email.
+- **Invoice branding** beyond the business name: no logo or custom template (the PDF does show
+  the discount, tax, payment method and change).
+- **Password recovery by email.** Users change their own password with the current one; an
+  administrator can reset it (`PUT /users/{id}/password`), which closes the user's sessions.
+- **Multi-store, multi-currency, customers as an entity.** One business, one currency (from
+  configuration), a free-text customer name per sale.
 
 ## Quick start
 
@@ -80,7 +83,10 @@ A new user gets the `USER` role: it can read and register sales. Touching the ca
 `ADMIN`, which is granted in the `users_roles` table.
 
 Configuration comes from the environment, never from the repository: `DB_URL`, `DB_USERNAME`,
-`DB_PASSWORD`, `JWT_SECRET` (**required, no default; at least 48 bytes**), `CORS_ORIGINS`, `PORT`.
+`DB_PASSWORD`, `JWT_SECRET` (**required, no default; at least 48 bytes**), `CORS_ORIGINS`, `PORT`,
+`INVOICE_BUSINESS_NAME`, `INVOICE_CURRENCY` (default `COP`), `SALES_TAX_RATE` (percent frozen into
+each sale, default `0`) and `BUSINESS_TIME_ZONE` (default `America/Bogota`; cuts the days of
+reports and cash closings).
 The app refuses to start without a valid `JWT_SECRET`: there is no fallback, because a signing
 key in a public repository would let anyone forge tokens.
 
@@ -188,6 +194,7 @@ Errors — always the same body, with the domain code as the message:
 | 605 | Supplier not found | 404 |
 | 606 | Purchase not found | 404 |
 | 607 | Product is inactive and cannot be sold or purchased | 409 |
+| 608 | Sale return not found | 404 |
 | 610 | Username already taken | 409 |
 | 611 | Invalid credentials | 401 |
 | 612 | Default role (`USER`) missing from the database | 500 |
@@ -201,6 +208,10 @@ Errors — always the same body, with the domain code as the message:
 | 623 | Category name already exists | 409 |
 | 624 | Supplier name already exists | 409 |
 | 625 | Supplier is inactive | 409 |
+| 626 | Cash received does not cover the total | 400 |
+| 627 | Discount above the subtotal | 400 |
+| 628 | Sale has returns and cannot be voided | 409 |
+| 629 | Return exceeds the units sold | 409 |
 | 630 | Invalid pagination parameters | 400 |
 | 631 | Invalid request (validation failed, malformed body, wrong type or missing parameter) | 400 |
 | 640 | Too many sign-in or sign-up attempts from this address | 429 |
@@ -211,24 +222,36 @@ Adding a code means touching `common/ErrorCodes` and this table in the same comm
 
 ### Endpoints
 
+Every list takes `?page=&limit=` (page 1-based, limit ≤ 100), `?sort=&dir=asc|desc` (field from a
+per-list whitelist; unknown names fall back to the default) and the filters noted below. Instants
+are ISO-8601 (`2026-09-18T00:00:00Z`).
+
 **Authentication** (public)
 
 - `POST /api/v1/auth/signup` — registers a user with the `USER` role and returns their token
 - `POST /api/v1/auth/signin` — authenticates and returns the access token
 
+**Settings and reports**
+
+- `GET /api/v1/settings` — business name, currency and tax rate — authenticated
+- `GET /api/v1/reports/summary` — today vs. yesterday, this month's purchases, low stock and inventory value — authenticated
+- `GET /api/v1/reports/sales?from=&to=` — totals, daily series, by seller and top products with estimated margin (dates `yyyy-MM-dd`, default last 30 days) — authenticated
+- `GET /api/v1/reports/closing?date=&userId=` — cash closing of one day by payment method, minus returns — authenticated
+
 **Products**
 
-- `GET /api/v1/products` — list, paginated — authenticated
+- `GET /api/v1/products` — filters `search` (SKU/name), `status`, `categoryId`, `lowStock=true`; sort `name|sku|price|stock|createdAt` — authenticated
 - `GET /api/v1/products/{id}` — read one — authenticated
 - `POST /api/v1/products` — create, with `initialStock` — `ADMIN`
 - `PUT /api/v1/products/{id}` — partial update; stock is **not** editable here — `ADMIN`
 - `DELETE /api/v1/products/{id}` — delete or deactivate — `ADMIN`
-- `GET /api/v1/products/{id}/movements` — stock ledger, paginated — authenticated
+- `GET /api/v1/products/{id}/movements` — stock ledger of one product — authenticated
 - `POST /api/v1/products/{id}/adjustments` — manual correction with a mandatory reason — `ADMIN`
+- `GET /api/v1/inventory/movements` — global ledger; filters `productId`, `type`, `from`, `to` — authenticated
 
 **Categories**
 
-- `GET /api/v1/categories` — list, paginated — authenticated
+- `GET /api/v1/categories` — filter `search`; sort `name|createdAt` — authenticated
 - `GET /api/v1/categories/{id}` — read one — authenticated
 - `POST /api/v1/categories` — create — `ADMIN`
 - `PUT /api/v1/categories/{id}` — partial update — `ADMIN`
@@ -236,16 +259,18 @@ Adding a code means touching `common/ErrorCodes` and this table in the same comm
 
 **Sales**
 
-- `GET /api/v1/sales` — list, paginated — authenticated
+- `GET /api/v1/sales` — filters `from`, `to`, `userId`, `paymentMethod`, `search` (number/customer); sort `date|total|number` — authenticated
 - `GET /api/v1/sales/{id}` — read one, with its line items — authenticated
-- `POST /api/v1/sales` — register — `USER` or `ADMIN`
+- `POST /api/v1/sales` — register with payment (see below) — `USER` or `ADMIN`
 - `PUT /api/v1/sales/{id}` — correct **the date only** — `USER` or `ADMIN`
-- `DELETE /api/v1/sales/{id}` — void the sale and return the stock — `ADMIN`
-- `GET /api/v1/sales/{id}/pdf` — the invoice as `application/pdf` — authenticated
+- `DELETE /api/v1/sales/{id}` — void the sale and return the stock; refused once it has returns — `ADMIN`
+- `GET /api/v1/sales/{id}/pdf?format=invoice|receipt` — A4 invoice or 80 mm receipt as `application/pdf` — authenticated
+- `POST /api/v1/sales/{id}/returns` — partial return: units of one or more lines go back to stock — `USER` or `ADMIN`
+- `GET /api/v1/sales/{id}/returns` — returns of a sale — authenticated
 
 **Suppliers**
 
-- `GET /api/v1/suppliers` — list, paginated — authenticated
+- `GET /api/v1/suppliers` — filters `search` (name/taxId/email), `status`; sort `name|createdAt` — authenticated
 - `GET /api/v1/suppliers/{id}` — read one — authenticated
 - `POST /api/v1/suppliers` — create — `ADMIN`
 - `PUT /api/v1/suppliers/{id}` — partial update, including `status` — `ADMIN`
@@ -253,7 +278,7 @@ Adding a code means touching `common/ErrorCodes` and this table in the same comm
 
 **Purchases**
 
-- `GET /api/v1/purchases` — list, paginated — authenticated
+- `GET /api/v1/purchases` — filters `from`, `to`, `supplierId`, `search` (number); sort `date|total|number` — authenticated
 - `GET /api/v1/purchases/{id}` — read one, with its line items — authenticated
 - `POST /api/v1/purchases` — register; adds stock and freezes the unit cost — `ADMIN`
 - `PUT /api/v1/purchases/{id}` — correct **the date only** — `ADMIN`
@@ -267,17 +292,29 @@ POST /api/v1/purchases
 **Users**
 
 - `GET /api/v1/users/me` — own profile — authenticated
+- `PUT /api/v1/users/me` — own names and photo — authenticated
 - `PUT /api/v1/users/me/password` — change own password; requires the current one — authenticated
-- `GET /api/v1/users` — list, paginated — `ADMIN`
+- `POST /api/v1/users/me/logout-all` — invalidates every token issued to the current user — authenticated
+- `GET /api/v1/users` — filters `search`, `status`; sort `username|name|createdAt` — `ADMIN`
 - `GET /api/v1/users/{id}` — read one — `ADMIN`
+- `POST /api/v1/users` — create with an initial role (no rate limit, no token issued) — `ADMIN`
+- `PUT /api/v1/users/{id}` — names and photo — `ADMIN`
 - `PUT /api/v1/users/{id}/roles` — replace the role set — `ADMIN`
 - `PUT /api/v1/users/{id}/status` — `ACTIVE` / `INACTIVE` — `ADMIN`
+- `PUT /api/v1/users/{id}/password` — reset without the current one; closes the user's sessions — `ADMIN`
 
-A sale is registered with its line items; price and total are set by the server:
+**Audit**
+
+- `GET /api/v1/audits` — every successful write; filters `username`, `method`, `resource`, `from`, `to` — `ADMIN`
+
+A sale is registered with its line items and how it was paid; subtotal, tax (from `SALES_TAX_RATE`),
+total and change are set by the server. `paymentMethod` is `CASH` (default), `CARD` or
+`TRANSFER`; `amountPaid` only matters in cash and must cover the total.
 
 ```json
 POST /api/v1/sales
-{ "items": [ { "productId": 1, "quantity": 3 } ] }
+{ "items": [ { "productId": 1, "quantity": 3 } ], "discount": 500,
+  "paymentMethod": "CASH", "amountPaid": 10000, "customerName": "Ana" }
 ```
 
 ```json
@@ -285,12 +322,22 @@ POST /api/v1/sales
   "id": 1,
   "saleNumber": "F-2026-000001",
   "saleDate": "2026-09-18T14:37:21.153220Z",
-  "total": 7502.25,
+  "subtotal": 7502.25, "discount": 500.00, "taxRate": 19.00, "tax": 1330.43, "total": 8332.68,
+  "paymentMethod": "CASH", "amountPaid": 10000.00, "changeAmount": 1667.32, "customerName": "Ana",
+  "userId": 1, "userName": "Edgar Matos",
   "items": [
-    { "productId": 1, "productSku": "COCA-350", "quantity": 3,
+    { "id": 1, "productId": 1, "productSku": "COCA-350", "quantity": 3, "returnedQuantity": 0,
       "unitPrice": 2500.75, "subtotal": 7502.25 }
   ]
 }
+```
+
+A partial return names the sold line and the units; they go back to stock with a `SALE_RETURN`
+ledger entry and the line's `returnedQuantity` caps any later return:
+
+```json
+POST /api/v1/sales/1/returns
+{ "reason": "Damaged packaging", "items": [ { "saleItemId": 1, "quantity": 1 } ] }
 ```
 
 ## Domain rules
@@ -340,10 +387,12 @@ Every successful write is recorded in the `audits` table with user, method and r
 ./mvnw test jacoco:report   # coverage report in target/site/jacoco
 ```
 
-Thirteen tests: the stock ledger invariants, a concurrency test (twenty simultaneous sales
-over ten units must accept exactly ten), the user-management guards, and HTTP-level tests of
-the authorization matrix, the 401/403 contract, token rejection for deactivated accounts,
-auditing, the invoice PDF and the rate limits. Migrations do **not** run during tests, so
+Twenty tests: the stock ledger invariants, a concurrency test (twenty simultaneous sales
+over ten units must accept exactly ten), the user-management guards, checkout arithmetic
+(discount, tax, change, short cash), partial returns (restock, cap, no voiding afterwards),
+report aggregates, and HTTP-level tests of the authorization matrix, the 401/403 contract,
+token rejection for deactivated accounts and after "log out everywhere", list filters,
+auditing, both PDF formats and the rate limits. Migrations do **not** run during tests, so
 a mistake in the SQL only shows up when starting against a real MySQL, where `ddl-auto=validate`
 compares the schema against the entities.
 

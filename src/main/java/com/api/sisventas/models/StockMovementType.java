@@ -12,6 +12,8 @@ public enum StockMovementType {
     SALE,
     /** Reversión de una venta anulada. */
     SALE_VOID,
+    /** Entrada por devolución parcial de una venta. */
+    SALE_RETURN,
     /** Corrección manual con motivo: merma, conteo, rotura. */
     ADJUSTMENT
 }

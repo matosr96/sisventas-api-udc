@@ -7,6 +7,27 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [No Publicado]
 
+### Añadido (sistema completo)
+- **Cobro**: método de pago (efectivo, tarjeta, transferencia), importe recibido y cambio,
+  nombre de cliente opcional; subtotal, descuento e impuesto (tasa `SALES_TAX_RATE`, congelada
+  en cada venta) guardados por separado del total. Códigos `626` (efectivo insuficiente) y
+  `627` (descuento mayor que el subtotal).
+- **Devoluciones parciales** (`POST /sales/{id}/returns`): correlativo `R-`, reingreso al stock
+  con asiento `SALE_RETURN`, tope por línea (`629`); una venta con devoluciones no se anula (`628`).
+- **Listados con filtros y orden en servidor** para todos los recursos (`search`, estado,
+  categoría, proveedor, vendedor, método de pago, rango de fechas; `sort`/`dir` con lista blanca).
+- **Reportes**: resumen de Inicio, informe de ventas (serie diaria, por vendedor, productos más
+  vendidos con margen estimado) y cierre de caja por método de pago menos devoluciones.
+- **Libro de stock global** (`GET /inventory/movements`) y **auditoría consultable**
+  (`GET /audits`, ADMIN).
+- **Usuarios**: alta por administrador con rol (`POST /users`), edición de datos propios y
+  ajenos, reinicio de contraseña por administrador y cierre de sesión en todos los dispositivos
+  (`users.token_version` dentro del JWT).
+- **PDF**: desglose de totales y pago; formato tirilla de 80 mm (`?format=receipt`).
+- `GET /settings` con nombre del negocio, moneda y tasa de impuesto. Zona horaria del negocio
+  (`BUSINESS_TIME_ZONE`) para cortar los días de los reportes.
+- Migración `0006_complete_pos.sql`.
+
 ### Corregido
 - Un cuerpo que no es JSON, un campo con tipo equivocado, un parámetro ausente o un `{id}` que no
   es número respondían 500 (`699`) y se logueaban como error propio. Ahora son 400 con el código

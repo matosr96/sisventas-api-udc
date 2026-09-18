@@ -118,7 +118,7 @@ class StockConcurrencyTest {
             signIn();
             start.await();
             try {
-                createSale.execute(new CreateSaleRequest(null, List.of(new SaleItemRequest(productId, 1))));
+                createSale.execute(new CreateSaleRequest(null, List.of(new SaleItemRequest(productId, 1)), null, null, null, null));
                 return true;
             } catch (DomainError error) {
                 assertEquals(ErrorCodes.INSUFFICIENT_STOCK, error.code());

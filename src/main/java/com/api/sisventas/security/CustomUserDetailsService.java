@@ -29,8 +29,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
         boolean enabled = user.getStatus() == UserStatus.ACTIVE;
         // disabled => DaoAuthenticationProvider rechaza el signin; el filtro JWT lo comprueba aparte.
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(), user.getPassword(), enabled, true, true, true, authoritiesOf(user.getRoles()));
+        return new AuthenticatedUser(user.getUsername(), user.getPassword(), enabled,
+                authoritiesOf(user.getRoles()), user.getTokenVersion());
     }
 
     private Collection<GrantedAuthority> authoritiesOf(Set<Role> roles) {

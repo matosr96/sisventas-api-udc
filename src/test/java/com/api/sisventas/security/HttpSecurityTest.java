@@ -158,6 +158,34 @@ class HttpSecurityTest {
     }
 
     @Test
+    void logoutEverywhereInvalidatesTheTokensIssuedBefore() throws Exception {
+        User account = save("http-logout-" + System.nanoTime(), Set.of(roleRepository.findByName(RoleName.USER).orElseThrow()));
+        String token = mockMvc.perform(post("/api/v1/auth/signin").with(r -> { r.setRemoteAddr("10.2.2.2"); return r; })
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"" + account.getUsername() + "\",\"password\":\"password123\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString()
+                .replaceAll(".*\"accessToken\":\"([^\"]+)\".*", "$1");
+        mockMvc.perform(as(get(PRODUCTS), token)).andExpect(status().isOk());
+        mockMvc.perform(as(post("/api/v1/users/me/logout-all"), token)).andExpect(status().isNoContent());
+        mockMvc.perform(as(get(PRODUCTS), token))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void listsAcceptFiltersAndRejectUnknownSortSilently() throws Exception {
+        mockMvc.perform(as(get(PRODUCTS + "?search=zzz-nothing&status=ACTIVE&lowStock=true&sort=hacker&dir=asc"), userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(0));
+        mockMvc.perform(as(get("/api/v1/audits"), userToken)).andExpect(status().isForbidden());
+        mockMvc.perform(as(get("/api/v1/audits?method=POST"), adminToken)).andExpect(status().isOk());
+        mockMvc.perform(as(get("/api/v1/reports/summary"), userToken)).andExpect(status().isOk());
+        mockMvc.perform(as(get("/api/v1/settings"), userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.taxRate").value(19));
+    }
+
+    @Test
     void invoicePdfIsServedAsPdf() throws Exception {
         String product = mockMvc.perform(as(post(PRODUCTS), adminToken).contentType(MediaType.APPLICATION_JSON)
                         .content(JSON_PRODUCT.formatted(System.nanoTime())))
@@ -175,6 +203,9 @@ class HttpSecurityTest {
                 .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString(".pdf")))
                 .andReturn().getResponse().getContentAsByteArray();
         assertTrue(new String(pdf, 0, 5).startsWith("%PDF-"), "empieza por la firma de un PDF");
+        mockMvc.perform(as(get("/api/v1/sales/" + saleId + "/pdf?format=receipt"), adminToken))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("-receipt.pdf")));
     }
 
     @Test

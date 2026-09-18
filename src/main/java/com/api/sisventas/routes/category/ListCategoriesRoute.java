@@ -20,11 +20,14 @@ public class ListCategoriesRoute {
         this.listCategories = listCategories;
     }
 
-    @Operation(summary = "List categories", description = "Paginated list { count, page, pages, items }")
+    @Operation(summary = "List categories", description = "Filters: search (name); sort: name|createdAt")
     @GetMapping("/api/v1/categories")
     public PaginatedResponse<CategoryResponse> handle(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String dir,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "" + Pagination.DEFAULT_LIMIT) int limit) {
-        return listCategories.execute(page, limit);
+        return listCategories.execute(search, sort, dir, page, limit);
     }
 }

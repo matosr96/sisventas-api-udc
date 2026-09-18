@@ -47,6 +47,10 @@ public class SaleItem {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
+    /** Unidades ya devueltas de esta línea: nunca se devuelve más de {@code quantity}. */
+    @Column(name = "returned_quantity", nullable = false)
+    private Integer returnedQuantity = 0;
+
     /** Precio unitario congelado en el momento de la venta. */
     @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal unitPrice;

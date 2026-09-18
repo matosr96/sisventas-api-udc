@@ -36,8 +36,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = tokenOf(request);
         if (StringUtils.hasText(token) && jwtGenerator.isValid(token)) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(jwtGenerator.usernameOf(token));
-            // Un token vigente no basta: la cuenta tiene que seguir activa.
-            if (userDetails.isEnabled()) {
+            // Un token vigente no basta: la cuenta tiene que seguir activa y el token, de la versión actual.
+            if (userDetails.isEnabled() && isCurrentVersion(userDetails, token)) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -45,6 +45,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isCurrentVersion(UserDetails userDetails, String token) {
+        int current = userDetails instanceof AuthenticatedUser user ? user.getTokenVersion() : 0;
+        return jwtGenerator.versionOf(token) == current;
     }
 
     private String tokenOf(HttpServletRequest request) {

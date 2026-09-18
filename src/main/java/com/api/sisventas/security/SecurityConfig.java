@@ -93,9 +93,12 @@ public class SecurityConfig {
                         .requestMatchers(SecurityConstants.PUBLIC_URLS).permitAll()
                         // El propio perfil y la propia contraseña: cualquier usuario autenticado.
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/password").authenticated()
-                        // Ver a los demás usuarios: solo ADMIN (las escrituras ya lo son por la regla general).
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/me/logout-all").authenticated()
+                        // Ver a los demás usuarios y la auditoría: solo ADMIN (las escrituras ya lo son).
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/**").hasAuthority(SecurityConstants.ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/audits/**").hasAuthority(SecurityConstants.ROLE_ADMIN)
                         // Lecturas: cualquier usuario autenticado.
                         .requestMatchers(HttpMethod.GET, "/api/v1/**").authenticated()
                         // Ventas: las registra y corrige quien vende.

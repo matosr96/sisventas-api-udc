@@ -3,6 +3,7 @@ package com.api.sisventas.routes.supplier;
 import com.api.sisventas.businessLogic.supplier.ListSuppliers;
 import com.api.sisventas.common.PaginatedResponse;
 import com.api.sisventas.common.Pagination;
+import com.api.sisventas.models.SupplierStatus;
 import com.api.sisventas.models.dtos.supplier.SupplierResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,11 +21,17 @@ public class ListSuppliersRoute {
         this.listSuppliers = listSuppliers;
     }
 
-    @Operation(summary = "List suppliers", description = "Paginated list { count, page, pages, items }")
+    @Operation(summary = "List suppliers",
+            description = "Filters: search (name/taxId/email), status; sort: name|createdAt"
+                    + " ")
     @GetMapping("/api/v1/suppliers")
     public PaginatedResponse<SupplierResponse> handle(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) SupplierStatus status,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String dir,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "" + Pagination.DEFAULT_LIMIT) int limit) {
-        return listSuppliers.execute(page, limit);
+        return listSuppliers.execute(search, status, sort, dir, page, limit);
     }
 }

@@ -10,6 +10,7 @@ public record SaleItemResponse(
         String productSku,
         String productName,
         Integer quantity,
+        Integer returnedQuantity,
         BigDecimal unitPrice,
         BigDecimal subtotal) {
 
@@ -20,6 +21,7 @@ public record SaleItemResponse(
                 item.getProduct().getSku(),
                 item.getProduct().getName(),
                 item.getQuantity(),
+                item.getReturnedQuantity(),
                 item.getUnitPrice(),
                 item.getSubtotal());
     }

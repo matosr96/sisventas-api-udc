@@ -93,7 +93,7 @@ class StockLedgerTest {
         assertEquals(new BigDecimal("450.00"), purchase.total());
         assertEquals(15, getProduct.execute(product.id()).currentStock());
 
-        createSale.execute(new CreateSaleRequest(null, List.of(new SaleItemRequest(product.id(), 12))));
+        createSale.execute(new CreateSaleRequest(null, List.of(new SaleItemRequest(product.id(), 12)), null, null, null, null));
         assertEquals(3, getProduct.execute(product.id()).currentStock());
 
         adjustStock.execute(product.id(), new AdjustStockRequest(-3, "merma"));

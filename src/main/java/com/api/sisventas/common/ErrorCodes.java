@@ -20,6 +20,7 @@ public final class ErrorCodes {
     public static final String SUPPLIER_NOT_FOUND = "605";
     public static final String PURCHASE_NOT_FOUND = "606";
     public static final String PRODUCT_INACTIVE = "607";
+    public static final String SALE_RETURN_NOT_FOUND = "608";
 
     public static final String USERNAME_ALREADY_EXISTS = "610";
     public static final String INVALID_CREDENTIALS = "611";
@@ -35,6 +36,10 @@ public final class ErrorCodes {
     public static final String CATEGORY_NAME_ALREADY_EXISTS = "623";
     public static final String SUPPLIER_NAME_ALREADY_EXISTS = "624";
     public static final String SUPPLIER_INACTIVE = "625";
+    public static final String INSUFFICIENT_PAYMENT = "626";
+    public static final String INVALID_DISCOUNT = "627";
+    public static final String SALE_HAS_RETURNS = "628";
+    public static final String RETURN_EXCEEDS_SOLD = "629";
 
     public static final String INVALID_PAGINATION = "630";
     public static final String INVALID_REQUEST = "631";
@@ -52,6 +57,7 @@ public final class ErrorCodes {
             Map.entry(SUPPLIER_NOT_FOUND, HttpStatus.NOT_FOUND),
             Map.entry(PURCHASE_NOT_FOUND, HttpStatus.NOT_FOUND),
             Map.entry(PRODUCT_INACTIVE, HttpStatus.CONFLICT),
+            Map.entry(SALE_RETURN_NOT_FOUND, HttpStatus.NOT_FOUND),
             Map.entry(USERNAME_ALREADY_EXISTS, HttpStatus.CONFLICT),
             Map.entry(INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED),
             Map.entry(DEFAULT_ROLE_MISSING, HttpStatus.INTERNAL_SERVER_ERROR),
@@ -65,6 +71,10 @@ public final class ErrorCodes {
             Map.entry(CATEGORY_NAME_ALREADY_EXISTS, HttpStatus.CONFLICT),
             Map.entry(SUPPLIER_NAME_ALREADY_EXISTS, HttpStatus.CONFLICT),
             Map.entry(SUPPLIER_INACTIVE, HttpStatus.CONFLICT),
+            Map.entry(INSUFFICIENT_PAYMENT, HttpStatus.BAD_REQUEST),
+            Map.entry(INVALID_DISCOUNT, HttpStatus.BAD_REQUEST),
+            Map.entry(SALE_HAS_RETURNS, HttpStatus.CONFLICT),
+            Map.entry(RETURN_EXCEEDS_SOLD, HttpStatus.CONFLICT),
             Map.entry(INVALID_PAGINATION, HttpStatus.BAD_REQUEST),
             Map.entry(INVALID_REQUEST, HttpStatus.BAD_REQUEST),
             Map.entry(TOO_MANY_REQUESTS, HttpStatus.TOO_MANY_REQUESTS),

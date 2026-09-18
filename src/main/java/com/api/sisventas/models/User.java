@@ -57,6 +57,13 @@ public class User {
     @Column(name = "status", nullable = false, length = 20)
     private UserStatus status = UserStatus.ACTIVE;
 
+    /**
+     * Versión de los tokens vigentes. Va dentro del JWT; si no coincide, el token no vale.
+     * Subirla cierra la sesión en todos los dispositivos sin guardar una lista negra.
+     */
+    @Column(name = "token_version", nullable = false)
+    private Integer tokenVersion = 0;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),

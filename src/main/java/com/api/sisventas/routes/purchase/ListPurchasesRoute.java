@@ -4,6 +4,8 @@ import com.api.sisventas.businessLogic.purchase.ListPurchases;
 import com.api.sisventas.common.PaginatedResponse;
 import com.api.sisventas.common.Pagination;
 import com.api.sisventas.models.dtos.purchase.PurchaseResponse;
+
+import java.time.Instant;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,11 +22,19 @@ public class ListPurchasesRoute {
         this.listPurchases = listPurchases;
     }
 
-    @Operation(summary = "List purchases", description = "Paginated list { count, page, pages, items }")
+    @Operation(summary = "List purchases",
+            description = "Filters: from, to, supplierId, search (number); sort:"
+                    + " date|total|number")
     @GetMapping("/api/v1/purchases")
     public PaginatedResponse<PurchaseResponse> handle(
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant to,
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String dir,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "" + Pagination.DEFAULT_LIMIT) int limit) {
-        return listPurchases.execute(page, limit);
+        return listPurchases.execute(from, to, supplierId, search, sort, dir, page, limit);
     }
 }
