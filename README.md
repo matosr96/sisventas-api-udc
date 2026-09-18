@@ -54,7 +54,7 @@ Without Docker, against your own MySQL 8:
 ```bash
 export DB_URL="jdbc:mysql://localhost:3306/bdsisventas"
 export DB_USERNAME=root DB_PASSWORD=...
-export JWT_SECRET="a_string_of_at_least_32_characters"
+export JWT_SECRET="a_string_of_at_least_48_bytes_long_no_default_exists"
 ./scripts/db-migrate.sh apply
 ./mvnw spring-boot:run
 ```
@@ -76,11 +76,13 @@ A new user gets the `USER` role: it can read and register sales. Touching the ca
 `ADMIN`, which is granted in the `users_roles` table.
 
 Configuration comes from the environment, never from the repository: `DB_URL`, `DB_USERNAME`,
-`DB_PASSWORD`, `JWT_SECRET` (32 characters minimum), `CORS_ORIGINS`, `PORT`.
+`DB_PASSWORD`, `JWT_SECRET` (**required, no default; at least 48 bytes**), `CORS_ORIGINS`, `PORT`.
+The app refuses to start without a valid `JWT_SECRET`: there is no fallback, because a signing
+key in a public repository would let anyone forge tokens.
 
 ## Stack
 
-Java 17 · Spring Boot 3.2 · Spring Security with JWT (jjwt 0.11.5) · Spring Data JPA · MySQL 8 ·
+Java 17 · Spring Boot 3.3 · Spring Security with JWT (jjwt 0.11.5) · Spring Data JPA · MySQL 8 ·
 springdoc-openapi · Lombok.
 
 Tooling: Maven (wrapper included), Docker Compose, GitHub Actions, Checkstyle, JaCoCo.
@@ -173,6 +175,7 @@ Errors — always the same body, with the domain code as the message:
 | 623 | Category name already exists | 409 |
 | 630 | Invalid pagination parameters | 400 |
 | 631 | Invalid request (DTO validation failed) | 400 |
+| 640 | Too many sign-in attempts | 429 |
 | 690 | Referential integrity violation | 409 |
 | 699 | Unhandled internal error | 500 |
 

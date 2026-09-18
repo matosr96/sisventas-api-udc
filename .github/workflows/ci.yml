@@ -6,39 +6,43 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Set up JDK 17
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
-    
-    - name: Build with Maven
-      run: mvn -B package --file pom.xml
-    
-    - name: Run Tests
-      run: mvn test
-    
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v3
+
+    # package ya corre Checkstyle (fase validate) y las pruebas.
+    - name: Build and test
+      run: ./mvnw -B package
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
         path: target/surefire-reports/
-    
-    - name: Build Docker Image
+
+    - name: Build Docker image
       run: docker build -t sisventas-api .
-    
-    - name: Run Security Scan
-      uses: snyk/actions/java@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+    # Solo corre si el repositorio tiene configurado el secret SNYK_TOKEN.
+    # Sin el secret se salta en vez de fallar, para no dejar el CI en rojo.
+    - name: Security scan (Snyk)
+      if: ${{ env.SNYK_TOKEN != '' }}
+      uses: snyk/actions/maven@master
       with:
-        args: --severity-threshold=high 
+        args: --severity-threshold=high
