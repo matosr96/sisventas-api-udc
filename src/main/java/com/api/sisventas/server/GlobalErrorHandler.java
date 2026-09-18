@@ -6,10 +6,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Map;
 
@@ -28,8 +31,18 @@ public class GlobalErrorHandler {
         return respond(error.code());
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> onInvalidRequest(MethodArgumentNotValidException error) {
+    /**
+     * Todo lo que el cliente mandó mal es un 631: un DTO que no pasa la validación, un cuerpo que
+     * no es JSON o trae un tipo equivocado, un parámetro obligatorio ausente o un {@code {id}} que
+     * no es número. Sin esto, un cuerpo malformado terminaba en 500 y se logueaba como error propio.
+     */
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            HttpMessageNotReadableException.class,
+            MissingServletRequestParameterException.class,
+            MethodArgumentTypeMismatchException.class
+    })
+    public ResponseEntity<Map<String, String>> onInvalidRequest(Exception error) {
         LOG.debug("Petición inválida: {}", error.getMessage());
         return respond(ErrorCodes.INVALID_REQUEST);
     }

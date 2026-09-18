@@ -202,7 +202,7 @@ Errors — always the same body, with the domain code as the message:
 | 624 | Supplier name already exists | 409 |
 | 625 | Supplier is inactive | 409 |
 | 630 | Invalid pagination parameters | 400 |
-| 631 | Invalid request (DTO validation failed) | 400 |
+| 631 | Invalid request (validation failed, malformed body, wrong type or missing parameter) | 400 |
 | 640 | Too many sign-in or sign-up attempts from this address | 429 |
 | 690 | Referential integrity violation | 409 |
 | 699 | Unhandled internal error | 500 |

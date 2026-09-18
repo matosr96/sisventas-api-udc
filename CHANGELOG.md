@@ -7,6 +7,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [No Publicado]
 
+### Corregido
+- Un cuerpo que no es JSON, un campo con tipo equivocado, un parámetro ausente o un `{id}` que no
+  es número respondían 500 (`699`) y se logueaban como error propio. Ahora son 400 con el código
+  `631`, igual que un DTO que no pasa la validación. Test que lo cubre.
+
 ### Corregido (auditoría completa)
 - **Carrera en el stock**: ventas simultáneas sobre el mismo producto leían el mismo saldo y
   cada una escribía el suyo (20 ventas sobre 10 unidades vendían 11 y dejaban 8). El libro

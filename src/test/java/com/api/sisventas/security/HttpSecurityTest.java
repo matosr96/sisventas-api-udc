@@ -1,5 +1,6 @@
 package com.api.sisventas.security;
 
+import com.api.sisventas.common.ErrorCodes;
 import com.api.sisventas.dataSources.AuditRepository;
 import com.api.sisventas.dataSources.RoleRepository;
 import com.api.sisventas.dataSources.UserRepository;
@@ -139,6 +140,21 @@ class HttpSecurityTest {
                 .andExpect(jsonPath("$.status").value(UserStatus.INACTIVE.name()));
         mockMvc.perform(as(get(PRODUCTS), victimToken))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void malformedInputIsA400WithTheErrorContractNeverA500() throws Exception {
+        mockMvc.perform(as(post(PRODUCTS), adminToken).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sku\":\"X\",\"categoryId\":}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorCodes.INVALID_REQUEST));
+        mockMvc.perform(as(post(PRODUCTS), adminToken).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sku\":\"X\",\"name\":\"x\",\"salePrice\":\"caro\",\"initialStock\":1}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorCodes.INVALID_REQUEST));
+        mockMvc.perform(as(get(PRODUCTS + "/not-a-number"), adminToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorCodes.INVALID_REQUEST));
     }
 
     @Test
