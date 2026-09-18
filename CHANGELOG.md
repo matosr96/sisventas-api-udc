@@ -29,6 +29,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - Migración `0006_complete_pos.sql`.
 
 ### Corregido
+- `SqlErrors.isUniqueViolation` solo reconocía el código 1062 de MySQL; ahora también el SQLState
+  estándar `23505` (H2 en pruebas, PostgreSQL), así que un duplicado se traduce a su código de
+  dominio en cualquier base.
 - Un cuerpo que no es JSON, un campo con tipo equivocado, un parámetro ausente o un `{id}` que no
   es número respondían 500 (`699`) y se logueaban como error propio. Ahora son 400 con el código
   `631`, igual que un DTO que no pasa la validación. Test que lo cubre.

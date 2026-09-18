@@ -14,6 +14,8 @@ public final class SqlErrors {
 
     /** Código de error de MySQL para entrada duplicada en un índice único. */
     private static final int DUPLICATE_ENTRY = 1062;
+    /** SQLState estándar de "unique violation" (H2 en pruebas, PostgreSQL). */
+    private static final String UNIQUE_VIOLATION_STATE = "23505";
 
     private SqlErrors() {
     }
@@ -21,7 +23,7 @@ public final class SqlErrors {
     public static boolean isUniqueViolation(DataIntegrityViolationException error) {
         Throwable cause = error.getMostSpecificCause();
         if (cause instanceof SQLIntegrityConstraintViolationException sqlCause) {
-            return sqlCause.getErrorCode() == DUPLICATE_ENTRY;
+            return sqlCause.getErrorCode() == DUPLICATE_ENTRY || UNIQUE_VIOLATION_STATE.equals(sqlCause.getSQLState());
         }
         return false;
     }

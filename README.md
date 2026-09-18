@@ -340,6 +340,17 @@ POST /api/v1/sales/1/returns
 { "reason": "Damaged packaging", "items": [ { "saleItemId": 1, "quantity": 1 } ] }
 ```
 
+## Security notes
+
+- **Bearer tokens, not cookies.** The API issues a JWT and expects it in `Authorization`; the panel
+  stores it in `localStorage`. The alternative — an `httpOnly` session cookie — would need CSRF
+  protection and credentialed CORS, and only pays off with a backend-for-frontend in between. The
+  mitigations that do exist: tokens expire (`JWT_EXPIRATION`), carry the account's `token_version`
+  so "log out everywhere" and an admin password reset invalidate every issued token at once, and
+  are rejected the moment the account is deactivated.
+- HS384 with a secret of at least 48 bytes, required at startup; the leaked sample secret is refused.
+- Sign-in and sign-up are rate-limited per IP; every successful write is audited without its body.
+
 ## Domain rules
 
 Model decisions that are not obvious from the endpoints alone:
@@ -387,12 +398,15 @@ Every successful write is recorded in the `audits` table with user, method and r
 ./mvnw test jacoco:report   # coverage report in target/site/jacoco
 ```
 
-Twenty tests: the stock ledger invariants, a concurrency test (twenty simultaneous sales
-over ten units must accept exactly ten), the user-management guards, checkout arithmetic
-(discount, tax, change, short cash), partial returns (restock, cap, no voiding afterwards),
-report aggregates, and HTTP-level tests of the authorization matrix, the 401/403 contract,
-token rejection for deactivated accounts and after "log out everywhere", list filters,
-auditing, both PDF formats and the rate limits. Migrations do **not** run during tests, so
+Thirty-five tests, chosen for what would hurt if it broke rather than for coverage numbers: the
+stock ledger invariants, a concurrency test (twenty simultaneous sales over ten units must accept
+exactly ten), checkout arithmetic (discount, tax, change, short cash), partial returns (restock,
+cap, no voiding afterwards), the report period and aggregates, server-side list filters and the sort
+whitelist, catalog uniques and deactivation instead of deletion, user accounts (admin creation,
+partial profile edits, password reset and token version), JWT signing and secret validation, the
+user-management guards, and HTTP-level tests of the authorization matrix, the 401/403 contract,
+token rejection for deactivated accounts and after "log out everywhere", auditing, both PDF formats
+and the rate limits. Migrations do **not** run during tests, so
 a mistake in the SQL only shows up when starting against a real MySQL, where `ddl-auto=validate`
 compares the schema against the entities.
 
