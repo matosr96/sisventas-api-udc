@@ -27,7 +27,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - SKU único por producto y nombre único por categoría.
 - Auditoría automática de toda escritura exitosa (`AuditFilter`, tabla `audits`).
 - Paginación uniforme `{ count, page, pages, items }` y códigos de error de dominio.
-- Migraciones SQL escritas a mano en `migraciones/` con `scripts/db-migrate.sh`.
+- Migraciones SQL escritas a mano en `migrations/` con `scripts/db-migrate.sh`.
 
 ### Cambiado
 - Arquitectura por capas con un archivo por operación: `routes/`, `businessLogic/`, `models/`,

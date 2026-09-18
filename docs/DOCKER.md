@@ -68,7 +68,7 @@ docker run --rm -p 8080:8080 \
   ghcr.io/matosr96/sisventas-api:latest
 ```
 
-La imagen no migra la base: aplica `migraciones/` antes, igual que en local.
+La imagen no migra la base: aplica `migrations/` antes, igual que en local.
 
 ## Acceso a los Servicios
 

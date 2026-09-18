@@ -97,7 +97,7 @@ docker run --rm -p 8080:8080 \
   ghcr.io/matosr96/sisventas-api:latest
 ```
 
-The image does not migrate the database: apply `migraciones/` first, exactly as in local
+The image does not migrate the database: apply `migrations/` first, exactly as in local
 development.
 
 ## Stack
@@ -125,7 +125,7 @@ src/main/java/com/api/sisventas/
 ├── dataSources/            # Spring Data repositories + SqlErrors
 └── common/                 # DomainError, ErrorCodes, PaginatedResponse, Pagination, Authenticated
 
-migraciones/                # Hand-written, numbered SQL (ddl-auto=validate)
+migrations/                # Hand-written, numbered SQL (ddl-auto=validate)
 scripts/db-migrate.sh       # Applies and tracks migrations
 ```
 
@@ -138,7 +138,7 @@ The rules that hold the structure together:
 
 ## Database and migrations
 
-The schema is written by hand in `migraciones/` and `spring.jpa.hibernate.ddl-auto=validate`:
+The schema is written by hand in `migrations/` and `spring.jpa.hibernate.ddl-auto=validate`:
 if an entity and its table disagree, the application refuses to start.
 
 ```bash

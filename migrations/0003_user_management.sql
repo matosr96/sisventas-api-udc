@@ -1,4 +1,4 @@
--- 0003_gestion_de_usuarios.sql
+-- 0003_user_management.sql
 -- Gestion de usuarios por la API. Hasta aqui la unica forma de asignar un rol o de
 -- retirar a alguien era editar la base a mano.
 --

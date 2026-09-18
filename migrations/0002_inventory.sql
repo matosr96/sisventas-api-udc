@@ -1,4 +1,4 @@
--- 0002_inventario.sql
+-- 0002_inventory.sql
 -- Reposiciones y compras a proveedor. Hasta aqui el stock solo bajaba al vender y subia
 -- al anular, y products.current_stock se podia editar a mano en PUT /products: un numero
 -- que cualquiera cambiaba sin dejar rastro.

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Aplica las migraciones de migraciones/ en orden y deja constancia en schema_migrations.
+# Aplica las migraciones de migrations/ en orden y deja constancia en schema_migrations.
 #
-#   ./scripts/db-migrate.sh status                      que falta por aplicar
+#   ./scripts/db-migrate.sh status                      qué falta por aplicar
 #   ./scripts/db-migrate.sh apply                       aplica lo pendiente
 #   ./scripts/db-migrate.sh baseline 0001_....sql       marca como aplicada sin ejecutarla
 #
-# Conexion por entorno: DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT.
+# Conexión por entorno: DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT. Requiere el cliente mysql.
 set -euo pipefail
 
-RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DIR_MIGRACIONES="$RAIZ/migraciones"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MIGRATIONS_DIR="$ROOT/migrations"
 
 DB_NAME="${DB_NAME:-bdsisventas}"
 DB_USER="${DB_USER:-root}"
@@ -24,7 +24,7 @@ mysql_exec() {
   fi
 }
 
-asegurar_registro() {
+ensure_registry() {
   mysql_exec --database="$DB_NAME" -e "
     CREATE TABLE IF NOT EXISTS schema_migrations (
       filename VARCHAR(255) PRIMARY KEY,
@@ -32,72 +32,72 @@ asegurar_registro() {
     ) ENGINE=InnoDB;"
 }
 
-ya_aplicada() {
-  local archivo="$1"
-  local encontrada
-  encontrada=$(mysql_exec --database="$DB_NAME" --skip-column-names --batch \
-    -e "SELECT COUNT(*) FROM schema_migrations WHERE filename = '$archivo';")
-  [ "$encontrada" -gt 0 ]
+is_applied() {
+  local file="$1"
+  local found
+  found=$(mysql_exec --database="$DB_NAME" --skip-column-names --batch \
+    -e "SELECT COUNT(*) FROM schema_migrations WHERE filename = '$file';")
+  [ "$found" -gt 0 ]
 }
 
-listar() {
-  find "$DIR_MIGRACIONES" -maxdepth 1 -name '[0-9][0-9][0-9][0-9]_*.sql' | sort
+list_migrations() {
+  find "$MIGRATIONS_DIR" -maxdepth 1 -name '[0-9][0-9][0-9][0-9]_*.sql' | sort
 }
 
-comando_status() {
-  asegurar_registro
-  for ruta in $(listar); do
-    archivo="$(basename "$ruta")"
-    if ya_aplicada "$archivo"; then
-      echo "  aplicada   $archivo"
+command_status() {
+  ensure_registry
+  for path in $(list_migrations); do
+    file="$(basename "$path")"
+    if is_applied "$file"; then
+      echo "  applied   $file"
     else
-      echo "  PENDIENTE  $archivo"
+      echo "  PENDING   $file"
     fi
   done
 }
 
-comando_apply() {
-  asegurar_registro
-  for ruta in $(listar); do
-    archivo="$(basename "$ruta")"
-    if ya_aplicada "$archivo"; then
+command_apply() {
+  ensure_registry
+  for path in $(list_migrations); do
+    file="$(basename "$path")"
+    if is_applied "$file"; then
       continue
     fi
-    echo "aplicando $archivo"
-    # El SQL y el registro entran en la misma transaccion: si el SQL falla, la
-    # migracion no queda marcada como aplicada.
+    echo "applying $file"
+    # El SQL y el registro entran en la misma transacción: si el SQL falla, la
+    # migración no queda marcada como aplicada.
     {
       echo "START TRANSACTION;"
-      cat "$ruta"
-      echo "INSERT INTO schema_migrations (filename) VALUES ('$archivo');"
+      cat "$path"
+      echo "INSERT INTO schema_migrations (filename) VALUES ('$file');"
       echo "COMMIT;"
     } | mysql_exec --database="$DB_NAME"
   done
-  echo "listo"
+  echo "done"
 }
 
-comando_baseline() {
-  local archivo="${1:-}"
-  if [ -z "$archivo" ]; then
-    echo "uso: db-migrate.sh baseline <archivo.sql>" >&2
+command_baseline() {
+  local file="${1:-}"
+  if [ -z "$file" ]; then
+    echo "usage: db-migrate.sh baseline <file.sql>" >&2
     exit 1
   fi
-  if [ ! -f "$DIR_MIGRACIONES/$archivo" ]; then
-    echo "no existe migraciones/$archivo" >&2
+  if [ ! -f "$MIGRATIONS_DIR/$file" ]; then
+    echo "migrations/$file does not exist" >&2
     exit 1
   fi
-  asegurar_registro
+  ensure_registry
   mysql_exec --database="$DB_NAME" \
-    -e "INSERT IGNORE INTO schema_migrations (filename) VALUES ('$archivo');"
-  echo "marcada como aplicada: $archivo"
+    -e "INSERT IGNORE INTO schema_migrations (filename) VALUES ('$file');"
+  echo "marked as applied: $file"
 }
 
 case "${1:-}" in
-  status) comando_status ;;
-  apply) comando_apply ;;
-  baseline) comando_baseline "${2:-}" ;;
+  status) command_status ;;
+  apply) command_apply ;;
+  baseline) command_baseline "${2:-}" ;;
   *)
-    echo "uso: db-migrate.sh {status|apply|baseline <archivo.sql>}" >&2
+    echo "usage: db-migrate.sh {status|apply|baseline <file.sql>}" >&2
     exit 1
     ;;
 esac

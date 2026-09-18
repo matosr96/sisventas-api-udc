@@ -1,4 +1,4 @@
--- 0001_esquema_inicial.sql
+-- 0001_initial_schema.sql
 -- Esquema completo de SisVentas.
 --
 -- Decisiones que conviene no reaprender por las malas:
