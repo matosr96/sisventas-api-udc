@@ -42,7 +42,10 @@
         <module name="EqualsHashCode"/>
         <module name="IllegalInstantiation"/>
         <module name="InnerAssignment"/>
-        <module name="MagicNumber"/>
+        <module name="MagicNumber">
+            <!-- Los limites de @Size/@Min viven en la anotacion: son el contrato del DTO. -->
+            <property name="ignoreAnnotation" value="true"/>
+        </module>
         <module name="MultipleVariableDeclarations"/>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>

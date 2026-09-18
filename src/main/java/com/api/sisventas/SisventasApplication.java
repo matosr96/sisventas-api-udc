@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class SisventasApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(SisventasApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(SisventasApplication.class, args);
+    }
 
 }

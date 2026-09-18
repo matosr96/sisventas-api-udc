@@ -1,19 +1,16 @@
-version: '3.8'
-
 services:
   app:
     build: .
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/sisventas
-      - SPRING_DATASOURCE_USERNAME=sisventas
-      - SPRING_DATASOURCE_PASSWORD=sisventas
+      DB_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-bdsisventas}
+      DB_USERNAME: ${MYSQL_USER:-sisventas}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-sisventas}
+      JWT_SECRET: ${JWT_SECRET:-cambia_este_secreto_por_uno_de_al_menos_32_caracteres}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
     depends_on:
       - db
-    volumes:
-      - ./src:/app/src
     networks:
       - sisventas-network
 
@@ -22,10 +19,10 @@ services:
     ports:
       - "3306:3306"
     environment:
-      - MYSQL_DATABASE=${MYSQL_DATABASE:sisventas}
-      - MYSQL_USER=${MYSQL_USER:sisventas}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:sisventas}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-bdsisventas}
+      MYSQL_USER: ${MYSQL_USER:-sisventas}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-sisventas}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
@@ -36,9 +33,7 @@ services:
     ports:
       - "8081:80"
     environment:
-      - PMA_HOST=db
-      - PMA_USER=sisventas
-      - PMA_PASSWORD=sisventas
+      PMA_HOST: db
     depends_on:
       - db
     networks:
