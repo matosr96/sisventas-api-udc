@@ -13,8 +13,8 @@ public record CreateProductRequest(
         @NotBlank @Size(max = 120) String name,
         @PositiveOrZero BigDecimal purchasePrice,
         @NotNull @PositiveOrZero BigDecimal salePrice,
-        @NotNull @PositiveOrZero Integer currentStock,
-        @PositiveOrZero Integer initialStock,
+        /** Unidades con las que nace. Queda como asiento INITIAL del libro de stock. */
+        @NotNull @PositiveOrZero Integer initialStock,
         ProductStatus status,
         String image,
         @PositiveOrZero Integer lowStock,

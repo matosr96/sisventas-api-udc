@@ -66,13 +66,8 @@ public class UpdateProduct {
         }
     }
 
+    /** El stock no se toca aquí: solo cambia por compra, venta, anulación o ajuste, con asiento. */
     private void applyStock(Product product, UpdateProductRequest request) {
-        if (request.currentStock() != null) {
-            product.setCurrentStock(request.currentStock());
-        }
-        if (request.initialStock() != null) {
-            product.setInitialStock(request.initialStock());
-        }
         if (request.lowStock() != null) {
             product.setLowStock(request.lowStock());
         }

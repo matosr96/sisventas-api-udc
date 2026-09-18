@@ -17,6 +17,8 @@ public final class ErrorCodes {
     public static final String CATEGORY_NOT_FOUND = "602";
     public static final String SALE_NOT_FOUND = "603";
     public static final String USER_NOT_FOUND = "604";
+    public static final String SUPPLIER_NOT_FOUND = "605";
+    public static final String PURCHASE_NOT_FOUND = "606";
 
     public static final String USERNAME_ALREADY_EXISTS = "610";
     public static final String INVALID_CREDENTIALS = "611";
@@ -27,6 +29,8 @@ public final class ErrorCodes {
     public static final String INSUFFICIENT_STOCK = "621";
     public static final String SKU_ALREADY_EXISTS = "622";
     public static final String CATEGORY_NAME_ALREADY_EXISTS = "623";
+    public static final String SUPPLIER_NAME_ALREADY_EXISTS = "624";
+    public static final String SUPPLIER_INACTIVE = "625";
 
     public static final String INVALID_PAGINATION = "630";
     public static final String INVALID_REQUEST = "631";
@@ -41,6 +45,8 @@ public final class ErrorCodes {
             Map.entry(CATEGORY_NOT_FOUND, HttpStatus.NOT_FOUND),
             Map.entry(SALE_NOT_FOUND, HttpStatus.NOT_FOUND),
             Map.entry(USER_NOT_FOUND, HttpStatus.NOT_FOUND),
+            Map.entry(SUPPLIER_NOT_FOUND, HttpStatus.NOT_FOUND),
+            Map.entry(PURCHASE_NOT_FOUND, HttpStatus.NOT_FOUND),
             Map.entry(USERNAME_ALREADY_EXISTS, HttpStatus.CONFLICT),
             Map.entry(INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED),
             Map.entry(DEFAULT_ROLE_MISSING, HttpStatus.INTERNAL_SERVER_ERROR),
@@ -49,6 +55,8 @@ public final class ErrorCodes {
             Map.entry(INSUFFICIENT_STOCK, HttpStatus.CONFLICT),
             Map.entry(SKU_ALREADY_EXISTS, HttpStatus.CONFLICT),
             Map.entry(CATEGORY_NAME_ALREADY_EXISTS, HttpStatus.CONFLICT),
+            Map.entry(SUPPLIER_NAME_ALREADY_EXISTS, HttpStatus.CONFLICT),
+            Map.entry(SUPPLIER_INACTIVE, HttpStatus.CONFLICT),
             Map.entry(INVALID_PAGINATION, HttpStatus.BAD_REQUEST),
             Map.entry(INVALID_REQUEST, HttpStatus.BAD_REQUEST),
             Map.entry(TOO_MANY_REQUESTS, HttpStatus.TOO_MANY_REQUESTS),
